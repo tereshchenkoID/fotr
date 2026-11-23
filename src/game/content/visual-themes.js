@@ -67,7 +67,6 @@ export const heroVisuals = Object.fromEntries(
             jackpot,
           },
           jackpotSymbol: hero.jackpot.symbol,
-          cinematicRelic: id === 'thorin' ? 'orcrist' : hero.jackpot.symbol,
           symbols: Object.fromEntries(
             hero.slotConfig.pool.map(({ id: symbol }, index) => [
               symbol,

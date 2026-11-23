@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { Sparkles } from 'lucide-react'
+import {
+  Coins, FastForward, Gem, Sparkles
+} from 'lucide-react'
 
 import { symbolFallback } from '@/game/content/visual-themes'
 
@@ -11,66 +12,136 @@ import CombatEffect from '../CombatEffect'
 
 import style from './index.module.scss'
 
-const JackpotCinematicController = ({ hero, visuals, damage, onDismiss }) => {
+const JackpotCinematicController = ({
+  hero,
+  visuals,
+  scene,
+  phase,
+  enemy,
+  reward,
+  feedback,
+  changes,
+  onSkip,
+}) => {
   const t = useTranslations()
-  const dialog = useRef(null)
-  const dismiss = useRef(onDismiss)
-
-  useEffect(() => {
-    dismiss.current = onDismiss
-  }, [onDismiss])
-  useEffect(() => {
-    const element = dialog.current
-    const reduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches
-    const reveal = reduced ? 0 : 660
-    const entrance = window.setTimeout(() => element.showModal(), reveal)
-    const timer = window.setTimeout(
-      () => dismiss.current(),
-      reveal + (reduced ? 2600 : 4400)
-    )
-    return () => {
-      window.clearTimeout(entrance)
-      window.clearTimeout(timer)
-      element.close()
-    }
-  }, [])
+  const victory = phase === 'victory'
+  const impact = phase === 'impact' || phase === 'recovery'
+  const headline = victory ? t('results.win') : t(`heroes.${hero.id}.jackpot`)
+  const relic = visuals.symbols[scene.relic]?.image || symbolFallback
+  const figures = ['attack', 'blocked', 'healing', 'shield', 'focus'].filter(
+    (id) => feedback?.[id] > 0
+  )
 
   return (
-    <dialog
-      ref={dialog}
+    <section
       className={style.block}
-      data-effect={visuals.effects.jackpot}
-      data-frame={visuals.frame}
-      aria-labelledby="jackpot-title"
-      onCancel={(event) => {
-        event.preventDefault()
-        onDismiss()
-      }}
+      data-scene={scene.style}
+      data-phase={phase}
+      aria-label={headline}
     >
-      <div className={style.cinematicArt}>
-        <Image className={style.image}
-          src={hero.portrait}
+      <div className={style.stage} aria-hidden>
+        <Image
+          className={style.subject}
+          src={victory ? enemy : hero.portrait}
           alt=""
           fill
-          sizes="(max-width: 768px) 90vw, 650px"
+          sizes="(max-width: 600px) 85vw, 640px"
+          loading="eager"
         />
-        <Image className={style.relic} src={visuals.symbols[visuals.cinematicRelic]?.image || symbolFallback} alt="" width={128} height={128}
-          onError={({ currentTarget }) => {
-            if (!currentTarget.src.endsWith(symbolFallback)) currentTarget.src = symbolFallback
-          }} />
-        <CombatEffect large effect={visuals.effects.jackpot} />
+        {!victory && (
+          <>
+            <Image
+              className={style.target}
+              src={enemy}
+              alt=""
+              fill
+              sizes="(max-width: 600px) 42vw, 320px"
+            />
+            {scene.sigil && visuals.symbols[scene.sigil] && (
+              <Image
+                className={style.sigil}
+                src={visuals.symbols[scene.sigil].image}
+                alt=""
+                width={84}
+                height={84}
+              />
+            )}
+            <Image
+              className={style.relic}
+              src={relic}
+              alt=""
+              width={152}
+              height={152}
+              onError={({ currentTarget }) => {
+                if (!currentTarget.src.endsWith(symbolFallback))
+                  currentTarget.src = symbolFallback
+              }}
+            />
+          </>
+        )}
+        <div className={style.atmosphere} />
+        {scene.effect && (
+          <CombatEffect
+            effect={scene.effect}
+            large
+            reaction={victory ? 'victory' : undefined}
+          />
+        )}
       </div>
-      <div className={style.cinematicCopy}>
-        <Sparkles size={31} aria-hidden />
-        <p className={style.text}>{t('home.jackpot')}</p>
-        <h2 className={style.title} id="jackpot-title">{t(`heroes.${hero.id}.jackpot`)}</h2>
-        <p className={style.text}>{t(`heroes.${hero.id}.cinematic`)}</p>
-        {damage > 0 && <p className={style.damage}>{t('combatFeedback.attack', { value: damage })}</p>}
-        <Action onClick={onDismiss}>{t('battle.skip')}</Action>
+      <div className={style.copy}>
+        <h2 className={style.title}>{headline}</h2>
+        {!victory && !impact && (
+          <p className={style.description}>
+            {t(`heroes.${hero.id}.cinematic`)}
+          </p>
+        )}
+        {impact && (
+          <ul className={style.chips} aria-live="polite">
+            {feedback?.critical && <li>{t('combatFeedback.critical')}</li>}
+            {figures.map((id) => (
+              <li key={id}>
+                {t(`combatFeedback.${id}`, { value: feedback[id] })}
+              </li>
+            ))}
+            {changes
+              .filter(({ duration }) => duration > 0)
+              .map(({ id, duration }) => (
+                <li key={id}>
+                  {t(`statuses.${id}`)} · {duration}
+                </li>
+              ))}
+          </ul>
+        )}
+        {victory && reward && (
+          <ul className={style.chips}>
+            <li>
+              <Coins size={15} />
+              {t('story.coins', { value: reward.coins })}
+            </li>
+            <li>
+              <Sparkles size={15} />
+              {t('story.xp', { value: reward.xp })}
+            </li>
+            {reward.item && (
+              <li>
+                <Gem size={15} />
+                {t(`items.${reward.item}.name`)}
+              </li>
+            )}
+          </ul>
+        )}
       </div>
-    </dialog>
+      <Action
+        variant="secondary"
+        className={style.skip}
+        onClick={onSkip}
+        aria-label={t('battle.skip')}
+        title={t('battle.skip')}
+      >
+        <FastForward size={17} aria-hidden />
+        <span className={style.skipLabel}>{t('battle.skip')}</span>
+      </Action>
+    </section>
   )
 }
 

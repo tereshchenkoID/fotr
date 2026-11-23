@@ -13,17 +13,11 @@ import style from './index.module.scss'
 const isFixed = (battle, column) =>
   isReelFixed(column, battle.held, battle.statuses)
 
-export const getReelSpinDuration = (before) => {
-  const last = before.grid.findLastIndex(
-    (_, column) => !isFixed(before, column)
-  )
-  return last < 0 ? 0 : reelDuration(last) + 40
-}
-
-const ReelCell = ({ asset, label, winner }) => (
+const ReelCell = ({ asset, label, winner, spotlight }) => (
   <div
     className={style.cell}
     data-winner={winner}
+    data-spotlight={spotlight}
     data-rarity={asset.rarity}
     title={label}
     role={label ? 'img' : undefined}
@@ -69,19 +63,24 @@ const ReelStrip = ({ previous, result, pool, visuals, column, turn }) => {
   )
 }
 
-const Reels = ({ hero, visuals, result, before, play, locked }) => {
+const Reels = ({ hero, visuals, result, before, play, locked, spotlight }) => {
   const t = useTranslations()
   const pool = hero.slotConfig.pool
   for (const { image } of Object.values(visuals.symbols))
     preload(image, { as: 'image' })
   const shown = before || result
   const matches = before ? [] : result.matches
+  const focusCells = spotlight?.cells
+  const focusOrigin = focusCells && {
+    '--focus-x': `${focusCells.reduce((sum, cell) => sum + Number(cell[0]) + 0.5, 0) * 20 / focusCells.length}%`,
+    '--focus-y': `${focusCells.reduce((sum, cell) => sum + Number(cell[2]) + 0.5, 0) * 100 / (3 * focusCells.length)}%`,
+  }
   const highlighted = new Set(matches.flatMap(({ cells }) => cells))
 
   return (
     <>
       <div className={style.frame} data-frame={visuals.frame}>
-        <div className={style.block} aria-busy={!!before}>
+        <div className={style.block} aria-busy={!!before} data-focus={!!spotlight} style={focusOrigin}>
           {result.grid.map((reel, column) => {
             const spinning = before && !isFixed(before, column)
             return (
@@ -104,6 +103,7 @@ const Reels = ({ hero, visuals, result, before, play, locked }) => {
                       asset={visuals.symbols[symbol]}
                       label={t(`symbols.${shown.grid[column][row]}`)}
                       winner={highlighted.has(`${column}:${row}`)}
+                      spotlight={focusCells?.includes(`${column}:${row}`)}
                     />
                   ))}
                 </div>
@@ -132,6 +132,7 @@ const Reels = ({ hero, visuals, result, before, play, locked }) => {
                 <polyline
                   className={style.line}
                   key={line}
+                  data-spotlight={spotlight ? spotlight.line === line : undefined}
                   pathLength={1}
                   style={{ '--line-delay': `${index * 95}ms` }}
                   points={cells

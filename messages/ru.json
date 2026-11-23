@@ -633,6 +633,8 @@
     "healing": "Лечение +{value}",
     "focus": "Концентрация +{value}",
     "shield": "Щит +{value}",
+    "statusApplied": "{status} · длительность {duration}",
+    "statusEnded": "{status} · эффект закончился",
     "critical": "Критический удар",
     "phase": "Босс меняет фазу",
     "cost": "Цена — {value} концентрации"

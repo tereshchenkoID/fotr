@@ -633,6 +633,8 @@
     "healing": "Зцілення +{value}",
     "focus": "Зосередження +{value}",
     "shield": "Щит +{value}",
+    "statusApplied": "{status} · тривалість {duration}",
+    "statusEnded": "{status} · ефект завершився",
     "critical": "Критичний удар",
     "phase": "Бос змінює фазу",
     "cost": "Ціна — {value} зосередження"

@@ -1,3 +1,5 @@
+import { isReelFixed } from '../../../game/minigames/slots.js'
+
 export const reelDuration = (column) => 630 + column * 135
 
 export const buildReelStrip = (previous, result, pool, column, turn) => {
@@ -14,4 +16,9 @@ export const buildReelStrip = (previous, result, pool, column, turn) => {
     landingRow,
     initialRow,
   }
+}
+
+export const getReelSpinDuration = ({ grid, held, statuses }) => {
+  const last = grid.findLastIndex((_, column) => !isReelFixed(column, held, statuses))
+  return last < 0 ? 0 : reelDuration(last) + 40
 }

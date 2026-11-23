@@ -333,3 +333,46 @@
     animation: none;
   }
 }
+
+.reelStage {
+  display: grid;
+  gap: 0.58rem;
+  position: relative;
+}
+
+.combatantCaption,
+.reward {
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.combatantCaption {
+  margin-block-end: 0.25rem;
+}
+
+.arena[data-boss='true'] .enemy .portrait {
+  border: 1px solid var(--theme-frame);
+}
+
+.arena[data-stage='victory'] .enemy .portrait {
+  animation: portrait-fall 390ms ease-out both;
+}
+
+@keyframes portrait-fall {
+  to {
+    opacity: 0.45;
+    transform: translateY(0.12rem);
+  }
+}
+
+@media (width < 38rem) {
+  .portrait {
+    aspect-ratio: 2.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena[data-stage='victory'] .enemy .portrait {
+    animation: none;
+  }
+}

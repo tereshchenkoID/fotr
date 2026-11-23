@@ -243,3 +243,47 @@
   font-size: 0.75rem;
   color: var(--accent);
 }
+
+.block {
+  transform-origin: var(--focus-x, 50%) var(--focus-y, 50%);
+
+  &[data-focus='true'] {
+    animation: focus-line 660ms ease-out both;
+
+    .cell[data-spotlight='false']::after {
+      @include absolute-filled;
+
+      background: #080a12b8;
+      content: '';
+    }
+
+    .line[data-spotlight='false'] {
+      visibility: hidden;
+    }
+
+    .line[data-spotlight='true'] {
+      stroke-opacity: 0.9;
+      animation-delay: 0ms;
+    }
+  }
+}
+
+.cell {
+  position: relative;
+}
+
+@keyframes focus-line {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block[data-focus='true'] {
+    animation: none;
+  }
+}

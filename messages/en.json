@@ -633,6 +633,8 @@
     "healing": "Healed {value}",
     "focus": "Focus +{value}",
     "shield": "Shield +{value}",
+    "statusApplied": "{status} applied · {duration} turns",
+    "statusEnded": "{status} ended",
     "critical": "Critical hit",
     "phase": "The boss changes phase",
     "cost": "Costs {value} Focus"
