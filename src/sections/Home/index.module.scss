@@ -1,0 +1,348 @@
+.hero {
+  display: grid;
+  align-items: center;
+  position: relative;
+  background: #101923 url('/art/key-mobile.webp') 55% 42% / cover no-repeat;
+  min-block-size: clamp(31rem, 78svh, 45rem);
+  isolation: isolate;
+  border-block-end: 1px solid var(--line);
+
+  &::before {
+    @include absolute-filled;
+
+    background:
+      linear-gradient(90deg, #0b1017ed, #0b101740 95%),
+      linear-gradient(0deg, var(--ink), transparent 42%);
+    z-index: -1;
+    content: '';
+  }
+
+  @include tab-s {
+    background-image: url('/art/key.webp');
+    background-position: center 54%;
+
+    &::before {
+      background:
+        linear-gradient(90deg, #090d13d9 2%, #0a10175c 48%, transparent 78%),
+        linear-gradient(0deg, #0c1015 0%, transparent 33%);
+    }
+  }
+}
+
+.heroContent {
+  @include container;
+
+  padding-block: 4rem 6rem;
+
+  .heroTitle {
+    margin-block: 1rem 1.35rem;
+    font-size: clamp(3.25rem, 8.8vw, 8rem);
+    line-height: 0.89;
+    color: #f4ebd4;
+    letter-spacing: -0.064em;
+    text-shadow: 0 3px 32px #05080ba8;
+
+    .heroAccent {
+      display: block;
+      color: var(--gold-bright);
+    }
+  }
+}
+
+.eyebrow {
+  @include flex($align-items: center);
+
+  gap: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--gold);
+  letter-spacing: 0.17em;
+
+  .rule {
+    inline-size: 1.6rem;
+    block-size: 1px;
+    background: var(--gold);
+  }
+}
+
+.heroText {
+  font-size: clamp(1rem, 2.1vw, 1.17rem);
+  color: #e1dcd2;
+  max-inline-size: 32rem;
+}
+
+.heroActions {
+  @include flex($align-items: center, $wrap: wrap);
+
+  gap: 0.75rem 1.45rem;
+  margin-block-start: 1.65rem;
+
+  .heroPlay {
+    min-block-size: 3.25rem;
+    padding-inline: 1.45rem;
+  }
+}
+
+.explore {
+  @include flex($align-items: center, $display: inline-flex);
+
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--text);
+  min-block-size: 2.8rem;
+
+  .exploreIcon {
+    color: var(--gold);
+  }
+
+  &:hover {
+    color: var(--gold);
+  }
+}
+
+.heroFooter {
+  @include container;
+
+  gap: 0.55rem clamp(0.9rem, 4vw, 2.7rem);
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 0;
+  padding-block: 0.8rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-block-start: 1px solid var(--line);
+
+  @include flex($wrap: wrap);
+
+  .feature {
+    @include flex($align-items: center, $display: inline-flex);
+
+    gap: 0.45rem;
+  }
+
+  .featureIcon {
+    color: var(--gold);
+  }
+}
+
+.section {
+  @include container;
+
+  padding-block: clamp(2.75rem, 6vw, 5.5rem);
+  scroll-margin-block-start: 0.75rem;
+}
+
+.sectionHead {
+  max-inline-size: 40rem;
+  margin-block-end: 1.75rem;
+
+  .sectionTitle {
+    margin-block: 0.36rem 0.65rem;
+    font-size: clamp(1.9rem, 5vw, 3.45rem);
+  }
+
+  .description {
+    color: var(--muted);
+  }
+}
+
+.cards {
+  display: grid;
+  gap: var(--gap);
+
+  @include tab-s {
+    grid-template-columns: repeat(3, minmax(0.1rem, 1fr));
+  }
+}
+
+.campaign,
+.portrait {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  min-block-size: 24rem;
+  isolation: isolate;
+
+  @include flex($align-items: flex-end);
+
+  .cardImage {
+    z-index: -2;
+    object-fit: cover;
+
+    @include transition(transform, 350ms, ease);
+  }
+
+  &::before {
+    @include absolute-filled;
+
+    background: linear-gradient(
+      0deg,
+      #090b0ff7 4%,
+      #0a0d12bf 50%,
+      transparent 87%
+    );
+    z-index: -1;
+    content: '';
+  }
+}
+
+.campaign:hover {
+  border-color: var(--gold-dark);
+
+  .cardImage {
+    transform: scale(1.045);
+  }
+}
+
+.cardCopy {
+  padding: clamp(1rem, 2vw, 1.5rem);
+
+  .cardTitle {
+    margin-block: 0.45rem;
+    font-size: clamp(1.35rem, 2.4vw, 2.05rem);
+  }
+
+  .cardDescription {
+    font-size: 0.95rem;
+    color: #d8d4ca;
+  }
+}
+
+.cardLink {
+  @include flex($align-items: center);
+
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  margin-block-start: 1.1rem;
+}
+
+.roster {
+  border-block: 1px solid var(--line);
+
+  .rosterAction {
+    margin-block-start: 1.25rem;
+  }
+}
+
+.portrait {
+  min-block-size: 22rem;
+}
+
+.infoCard {
+  @include panel;
+
+  padding: clamp(1rem, 2.8vw, 1.8rem);
+
+  .infoIcon {
+    margin-block-end: 0.7rem;
+    color: var(--gold);
+  }
+
+  .infoTitle {
+    margin-block-end: 0.55rem;
+    font-size: 1.25rem;
+  }
+
+  .infoText {
+    color: var(--muted);
+  }
+}
+
+.split {
+  display: grid;
+  align-items: center;
+  gap: var(--gap);
+  border-block-start: 1px solid var(--line);
+
+  > .sectionHead,
+  > .mapArt {
+    margin: 0;
+  }
+
+  @include tab-s {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.mapArt {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  min-block-size: 18rem;
+
+  .artImage {
+    object-fit: cover;
+  }
+}
+
+.cinematic .artImage {
+  object-position: 50% 32%;
+}
+
+.faq {
+  max-inline-size: 50rem;
+
+  .faqItem {
+    padding-block: 0.8rem;
+    border-block-end: 1px solid var(--line);
+  }
+
+  .faqQuestion {
+    @include flex($justify-content: space-between, $align-items: center);
+
+    min-block-size: 2.4rem;
+    gap: 0.8rem;
+    font-weight: 700;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .faqAnswer {
+    margin-block: 0.45rem;
+    color: var(--muted);
+  }
+
+  .faqItem[open] .faqIcon {
+    transform: rotate(180deg);
+  }
+}
+
+.footer {
+  @include container;
+  @include flex(
+    $justify-content: space-between,
+    $align-items: center,
+    $wrap: wrap
+  );
+
+  gap: 1rem;
+  padding-block: 1.35rem;
+  border-block-start: 1px solid var(--line);
+
+  .footerBrand {
+    @include flex($align-items: center);
+
+    gap: 0.65rem;
+    font-family: var(--font-heading);
+    color: var(--gold);
+  }
+
+  .footerText {
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campaign .cardImage {
+    transition: none;
+  }
+}

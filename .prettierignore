@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+coverage
+package-lock.json
+public
+.idea
+src/scss/abstract
+**/*.js
+**/*.mjs

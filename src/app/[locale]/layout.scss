@@ -1,0 +1,103 @@
+:root {
+  --ink: #0c1015;
+  --surface: #141a22;
+  --raised: #1b232c;
+  --text: #f2e9d7;
+  --muted: #b3b5b7;
+  --gold: #deba7d;
+  --gold-bright: #f3d69e;
+  --gold-dark: #865e33;
+  --line: #aa8b5440;
+  --danger: #f29a88;
+  --success: #a8c498;
+  --accent: var(--gold);
+  --font-body: 'DM Sans Variable', system-ui, sans-serif;
+  --font-heading: 'Cinzel Variable', georgia, serif;
+  --radius: 0.25rem;
+  --container: 76rem;
+  --gutter: clamp(1.125rem, 4vw, 3rem);
+  --gap: clamp(1rem, 2.3vw, 2rem);
+  --z-header: 10;
+  --z-dialog: 20;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font: 400 1rem/1.6 var(--font-body);
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-inline-size: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  overflow-wrap: anywhere;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.12;
+}
+
+ul {
+  padding-inline-start: 1.25rem;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

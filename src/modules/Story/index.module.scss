@@ -1,0 +1,118 @@
+.block {
+  @include panel;
+
+  max-inline-size: 62rem;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.banner {
+  position: relative;
+
+  @include flex($align-items: end);
+
+  min-block-size: clamp(13rem, 31vw, 23rem);
+  isolation: isolate;
+  border-block-end: 1px solid var(--line);
+
+  .bannerImage {
+    z-index: -2;
+    object-fit: cover;
+    object-position: 50% 40%;
+  }
+
+  &::after {
+    @include absolute-filled;
+
+    background: linear-gradient(0deg, #131922 1%, #11161c40 83%);
+    z-index: -1;
+    content: '';
+  }
+}
+
+.bannerText {
+  padding: clamp(1rem, 4vw, 2.3rem);
+
+  .chapter {
+    margin-block: 1rem 0.2rem;
+    color: var(--gold);
+  }
+
+  .location {
+    font-size: clamp(2rem, 6vw, 4rem);
+  }
+}
+
+.content {
+  display: grid;
+  gap: 0.8rem;
+  padding: clamp(1rem, 4vw, 2.3rem);
+
+  .quest {
+    font-size: clamp(1.5rem, 3vw, 2.4rem);
+  }
+
+  .description {
+    max-inline-size: 60ch;
+    color: var(--muted);
+  }
+
+  .quote {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    border-inline-start: 2px solid var(--gold-dark);
+
+    .speaker {
+      font-size: 0.8rem;
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .quoteText {
+      font-size: 1.12rem;
+      color: var(--text);
+      margin-block-start: 0.35rem;
+    }
+  }
+}
+
+.eyebrow {
+  @include flex($align-items: center);
+
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.actions {
+  @include flex($align-items: flex-start, $wrap: wrap);
+
+  gap: 0.65rem;
+  margin-block-start: 0.5rem;
+}
+
+.choice {
+  .requirement {
+    font-size: 0.76rem;
+    color: var(--muted);
+    max-inline-size: 17ch;
+    margin-block-start: 0.2rem;
+  }
+}
+
+.loot {
+  @include flex($wrap: wrap);
+
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .reward {
+    @include flex($align-items: center);
+
+    gap: 0.45rem;
+    color: var(--gold);
+  }
+}

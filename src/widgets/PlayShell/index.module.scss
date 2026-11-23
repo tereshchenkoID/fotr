@@ -1,0 +1,46 @@
+.block {
+  @include container;
+
+  padding-block-end: max(3rem, env(safe-area-inset-bottom));
+}
+
+.nav {
+  @include flex($wrap: wrap);
+
+  gap: 0.2rem 0.35rem;
+  margin-block-end: clamp(1.45rem, 4vw, 2.5rem);
+  padding-block: 0.55rem;
+  border-block-end: 1px solid var(--line);
+
+  .navLink {
+    @include flex($align-items: center, $display: inline-flex);
+
+    gap: 0.45rem;
+    padding-inline: 0.55rem;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    color: var(--muted);
+    min-block-size: 2.7rem;
+
+    &:hover,
+    &[aria-current] {
+      background: var(--surface);
+      color: var(--gold-bright);
+    }
+  }
+}
+
+.error {
+  margin-block: 1rem;
+  color: var(--muted);
+}
+
+.error {
+  padding: 0.6rem;
+  border: 1px solid currentcolor;
+  color: var(--danger);
+
+  .recoveryLink {
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,46 @@
+.block {
+  --meter-color: var(--gold);
+
+  .progress {
+    display: block;
+    border: 0;
+    border-radius: 1rem;
+    background: #0b1015;
+    appearance: none;
+    inline-size: 100%;
+    block-size: 0.43rem;
+    accent-color: var(--meter-color);
+
+    &::-webkit-progress-bar {
+      border-radius: 1rem;
+      background: #0b1015;
+    }
+
+    &::-webkit-progress-value {
+      border-radius: 1rem;
+      background: var(--meter-color);
+    }
+
+    &::-moz-progress-bar {
+      border-radius: 1rem;
+      background: var(--meter-color);
+    }
+  }
+}
+
+.health {
+  --meter-color: #bd6659;
+}
+
+.focus {
+  --meter-color: #74b2c4;
+}
+
+.caption {
+  @include flex($justify-content: space-between);
+
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-block-end: 0.3rem;
+}

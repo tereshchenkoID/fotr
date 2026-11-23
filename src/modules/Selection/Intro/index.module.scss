@@ -1,0 +1,16 @@
+.block {
+  margin-block-end: 1.75rem;
+
+  .introTitle {
+    font-size: clamp(2rem, 7vw, 4rem);
+  }
+
+  .introText {
+    margin-block: 0.5rem;
+    color: var(--muted);
+  }
+
+  .actions {
+    margin-block-start: 0.65rem;
+  }
+}

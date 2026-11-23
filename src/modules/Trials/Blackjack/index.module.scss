@@ -1,0 +1,236 @@
+.block {
+  --card-size: clamp(2.5rem, 12vw, 4.75rem);
+  --felt-line: #d0a66745;
+
+  display: grid;
+  gap: 0.7rem;
+  position: relative;
+  padding: clamp(0.8rem, 3vw, 1.5rem);
+  border: 1px solid #947245aa;
+  border-radius: clamp(0.7rem, 3vw, 1.55rem);
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    #234a3e,
+    #112720 74%,
+    #0b1c18
+  );
+  box-shadow:
+    inset 0 0 2.5rem #070c0bbf,
+    0 0.6rem 1.6rem #05080a54;
+  isolation: isolate;
+
+  &::before {
+    position: absolute;
+    inset: 0.35rem;
+    border: 1px solid var(--felt-line);
+    border-radius: inherit;
+    background-image: repeating-linear-gradient(
+      135deg,
+      #dac89b08 0 1px,
+      transparent 1px 5px
+    );
+    z-index: -1;
+    content: '';
+    pointer-events: none;
+  }
+}
+
+.hand {
+  --deal-direction: -1;
+
+  display: grid;
+  justify-items: center;
+  gap: 0.48rem;
+
+  &[data-dealer='true'] {
+    --deal-direction: 1;
+  }
+
+  .handTitle {
+    @include flex($justify-content: center, $align-items: center);
+
+    gap: 0.55rem;
+    font-size: clamp(0.93rem, 2.8vw, 1.16rem);
+    text-align: center;
+    color: var(--gold-bright);
+    min-block-size: 1.7rem;
+  }
+}
+
+.score {
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--felt-line);
+  border-radius: 1rem;
+  background: #0b1d17;
+  color: var(--text);
+  font: 700 0.78rem var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.cards {
+  @include flex($justify-content: center, $wrap: wrap);
+
+  max-inline-size: 100%;
+  gap: clamp(0.26rem, 1.3vw, 0.7rem);
+}
+
+.card,
+.empty {
+  display: block;
+  inline-size: var(--card-size);
+  aspect-ratio: 0.715;
+  border-radius: clamp(0.22rem, 0.8vw, 0.44rem);
+}
+
+.empty {
+  border: 1px dashed var(--felt-line);
+  background: #152d2633;
+}
+
+.card {
+  perspective: 30rem;
+
+  &[data-dealing='true'] {
+    animation: arrive var(--deal-time) cubic-bezier(0.18, 0.68, 0.29, 1)
+      var(--deal-delay) both;
+  }
+}
+
+.cardInner {
+  display: block;
+  position: relative;
+  border-radius: inherit;
+  box-shadow: 0 0.24rem 0.5rem #07100ca6;
+  inline-size: 100%;
+  block-size: 100%;
+  transform-style: preserve-3d;
+
+  @include transition(transform, 350ms, ease);
+
+  &[data-covered='true'] {
+    transform: rotateY(180deg);
+  }
+}
+
+.face,
+.back {
+  @include absolute-filled;
+
+  display: grid;
+  place-items: center;
+  border: 1px solid #ae8c58;
+  border-radius: inherit;
+  backface-visibility: hidden;
+}
+
+.face {
+  background: radial-gradient(ellipse at 35% 20%, #fff3d6, #ebd8aa);
+  font-family: Georgia, serif;
+  color: #1e292b;
+
+  &[data-red='true'] {
+    color: #8d272a;
+  }
+}
+
+.corner {
+  display: grid;
+  justify-items: center;
+  position: absolute;
+  inset-block-start: 7%;
+  inset-inline-start: 9%;
+  font-size: clamp(0.58rem, 2.2vw, 0.92rem);
+  line-height: 1;
+
+  &:last-child {
+    inset: auto 9% 7% auto;
+    transform: rotate(180deg);
+  }
+}
+
+.suit {
+  font-size: clamp(1.15rem, 4.6vw, 2.55rem);
+  line-height: 1;
+}
+
+.back,
+.deck {
+  background:
+    repeating-linear-gradient(45deg, #aa86512b 0 1px, transparent 1px 5px),
+    linear-gradient(145deg, #3d2832, #211a26);
+  color: var(--gold-bright);
+}
+
+.back {
+  transform: rotateY(180deg);
+
+  &::before {
+    position: absolute;
+    inset: 9%;
+    border: 1px double #d8b07880;
+    border-radius: 0.2rem;
+    content: '';
+  }
+
+  .mark {
+    max-inline-size: 66%;
+  }
+}
+
+.divider {
+  @include flex($justify-content: center, $align-items: center);
+
+  gap: 0.75rem;
+  color: var(--felt-line);
+
+  &::before,
+  &::after {
+    block-size: 1px;
+    flex: 1;
+    background: currentcolor;
+    content: '';
+  }
+}
+
+.deck {
+  display: grid;
+  aspect-ratio: 0.78;
+  border: 1px solid #b99060;
+  border-radius: 0.25rem;
+  box-shadow:
+    2px 2px #33212c,
+    3px 3px #b9906070,
+    0 0.3rem 0.6rem #07100ca6;
+  transform: rotate(-12deg);
+  inline-size: 2.25rem;
+  place-items: center;
+}
+
+.actions {
+  @include flex($justify-content: center, $wrap: wrap);
+
+  gap: 0.5rem;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--deal-direction) * 52%)) rotate(-13deg)
+      scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card[data-dealing='true'] {
+    animation: none;
+  }
+
+  .cardInner {
+    transition: none;
+  }
+}

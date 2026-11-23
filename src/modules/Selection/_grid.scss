@@ -1,0 +1,10 @@
+@use '../../scss/abstract/helpers/mixins/breakpoints';
+
+@mixin selection-grid {
+  display: grid;
+  gap: var(--gap);
+
+  @include breakpoints.tab-s {
+    grid-template-columns: repeat(3, minmax(0.1rem, 1fr));
+  }
+}

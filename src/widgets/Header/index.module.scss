@@ -1,0 +1,99 @@
+.block {
+  position: relative;
+  background: #0b0f15;
+  z-index: var(--z-header);
+  border-block-end: 1px solid var(--line);
+}
+
+.inner {
+  @include container;
+  @include flex($justify-content: space-between, $align-items: center);
+
+  min-block-size: 4.25rem;
+  gap: 0.45rem;
+
+  @include tab-s {
+    min-block-size: 4.5rem;
+  }
+}
+
+.brand {
+  @include flex($align-items: center, $display: inline-flex);
+
+  gap: 0.55rem;
+  font-family: var(--font-heading);
+  font-size: clamp(0.74rem, 2vw, 1.06rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--gold-bright);
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+
+  .brandAccent {
+    font-size: 0.65em;
+    font-style: normal;
+  }
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: clamp(1.1rem, 2.8vw, 2.3rem);
+  font-size: 0.89rem;
+  font-weight: 600;
+  color: var(--muted);
+
+  @include hover {
+    .navLink:hover {
+      color: var(--gold-bright);
+    }
+  }
+
+  @include tab-s {
+    display: flex;
+  }
+}
+
+.actions {
+  @include flex($align-items: center);
+
+  gap: 0.65rem;
+
+  .play {
+    min-block-size: 2.25rem;
+    padding: 0.4rem 0.8rem;
+    color: var(--gold-bright);
+  }
+}
+
+.language {
+  gap: 0.22rem;
+  position: relative;
+  color: var(--gold);
+
+  @include flex($align-items: center);
+
+  .select {
+    padding-inline: 0.15rem 0.85rem;
+    border: 0;
+    background: transparent;
+    z-index: 1;
+    font-size: 0.84rem;
+    color: var(--text);
+    cursor: pointer;
+    appearance: none;
+    min-block-size: 2.65rem;
+  }
+
+  .caret {
+    position: absolute;
+    inset-inline-end: 0;
+    pointer-events: none;
+  }
+}
+
+@media (width < 24rem) {
+  .actions .play {
+    display: none;
+  }
+}

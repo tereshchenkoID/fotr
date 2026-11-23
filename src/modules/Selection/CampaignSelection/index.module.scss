@@ -1,0 +1,60 @@
+@use '../grid' as *;
+
+.block {
+  @include selection-grid;
+}
+
+.campaign {
+  @include panel;
+
+  position: relative;
+
+  @include flex($align-items: flex-end);
+
+  min-block-size: 25rem;
+  isolation: isolate;
+  overflow: hidden;
+
+  .campaignImage {
+    z-index: -2;
+    object-fit: cover;
+  }
+
+  &::before {
+    @include absolute-filled;
+
+    background: linear-gradient(
+      0deg,
+      #080b10 2%,
+      #080b10d4 45%,
+      transparent 86%
+    );
+    z-index: -1;
+    content: '';
+  }
+}
+
+.copy {
+  padding: 1.35rem;
+
+  .campaignTitle {
+    margin-block: 0.4rem;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+  }
+
+  .campaignText {
+    color: var(--muted);
+  }
+
+  .campaignAction {
+    margin-block-start: 1rem;
+  }
+}
+
+.era {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--gold);
+  letter-spacing: 0.13em;
+}

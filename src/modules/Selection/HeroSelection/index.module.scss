@@ -1,0 +1,56 @@
+@use '../grid' as *;
+
+.block {
+  @include selection-grid;
+}
+
+.hero {
+  @include panel;
+  @include flex($direction: column);
+
+  overflow: hidden;
+
+  .heroImage {
+    inline-size: 100%;
+    block-size: clamp(12rem, 36vw, 20rem);
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+}
+
+.heroCopy {
+  @include flex($align-items: flex-start, $direction: column);
+
+  flex: 1;
+  padding: 1rem;
+
+  .heroDescription {
+    flex: 1;
+    margin-block: 0.4rem 0.85rem;
+    color: var(--muted);
+  }
+
+  .heroAction {
+    margin-block-start: 0.9rem;
+  }
+}
+
+.stats {
+  @include flex($wrap: wrap);
+
+  gap: 0.4rem 1rem;
+  font-size: 0.86rem;
+  color: var(--gold);
+
+  .stat {
+    @include flex($align-items: center);
+
+    gap: 0.35rem;
+  }
+}
+
+@media (width >= 34rem) and (width < 48rem) {
+  .block {
+    grid-template-columns: repeat(2, minmax(0.1rem, 1fr));
+  }
+}
