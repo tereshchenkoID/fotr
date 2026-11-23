@@ -128,11 +128,12 @@ const Reels = ({ hero, visuals, result, before, play, locked }) => {
               preserveAspectRatio="none"
               aria-hidden="true"
             >
-              {matches.map(({ line, cells }) => (
+              {matches.map(({ line, cells }, index) => (
                 <polyline
                   className={style.line}
                   key={line}
                   pathLength={1}
+                  style={{ '--line-delay': `${index * 95}ms` }}
                   points={cells
                     .map((cell) =>
                       cell
@@ -151,19 +152,19 @@ const Reels = ({ hero, visuals, result, before, play, locked }) => {
         {shown.grid.map((_, column) => {
           const held = shown.held.includes(column)
           const fixed = !held && isFixed(shown, column)
+          const reason = fixed ? t('statuses.lock')
+            : locked ? t('combatUi.busy')
+              : !held && shown.focus < 2 ? t('combatUi.focus', { value: 2 })
+                : !held && shown.held.length === 2 ? t('combatUi.holdLimit') : null
           return (
             <button
               className={style.hold}
               key={column}
               type="button"
               aria-pressed={held}
-              aria-label={t('battle.holdReel', { reel: column + 1 })}
-              title={t(fixed ? 'statuses.lock' : 'battle.holdCost')}
-              disabled={
-                locked ||
-                fixed ||
-                (!held && (shown.focus < 2 || shown.held.length === 2))
-              }
+              aria-label={[t('battle.holdReel', { reel: column + 1 }), reason].filter(Boolean).join(' · ')}
+              title={reason || t('battle.holdCost')}
+              disabled={!!reason}
               onClick={() => play('hold', column)}
             >
               {held || fixed ? (

@@ -7,7 +7,6 @@ import { useGame } from '@/store/game'
 import Action from '@/components/Action'
 
 import journalStyle from '../index.module.scss'
-import style from './index.module.scss'
 
 const exportSave = (save) => {
   const file = new Blob([JSON.stringify(save, null, 2)], {
@@ -25,7 +24,6 @@ const Settings = () => {
   const t = useTranslations()
   const save = useGame((state) => state.save)
   const busy = useGame((state) => state.busy)
-  const dispatch = useGame((state) => state.dispatch)
   const importSave = useGame((state) => state.importSave)
   const reportInvalid = useGame((state) => state.reportInvalid)
   const reset = useGame((state) => state.reset)
@@ -46,20 +44,6 @@ const Settings = () => {
   return (
     <article className={journalStyle.block}>
       <h1 className={journalStyle.title}>{t('nav.settings')}</h1>
-      <section className={journalStyle.panel}>
-        <h2>{t('settings.combat')}</h2>
-        <label className={style.preference}>
-          <input className={style.checkbox}
-            type="checkbox"
-            checked={save?.settings.autoSpin ?? true}
-            disabled={busy || !save}
-            onChange={(event) =>
-              dispatch({ type: 'settings', autoSpin: event.target.checked })
-            }
-          />
-          {t('settings.autoSpin')}
-        </label>
-      </section>
       <section className={journalStyle.panel}>
         <h2>{t('settings.saves')}</h2>
         <p className={journalStyle.description}>{t('settings.local')}</p>

@@ -13,7 +13,7 @@ import {
   startNode,
 } from './story.js'
 
-export const saveVersion = 2
+export const saveVersion = 3
 export const initialSave = () => ({
   version: saveVersion,
   revision: 0,
@@ -22,7 +22,6 @@ export const initialSave = () => ({
   coins: 0,
   achievements: [],
   collection: [],
-  settings: { autoSpin: true },
 })
 
 export const newProgress = (hero) => ({
@@ -48,28 +47,26 @@ const launch = (hero, progress, node, random) => {
   if (node.type === 'battle')
     return startBattle(hero, progress, node.enemy, random)
   if (node.type === 'blackjack') return startBlackjack()
-  if (node.type === 'dice')
-    return startDice(
-      Math.min(3, progress.flags.reputation || progress.flags.influence || 0)
-    )
+  if (node.type === 'dice') return startDice()
   return null
 }
 
 export const trialTurn = (type, event) => type === 'blackjack'
   ? (event.player.length + event.dealer.length) * 2 + Number(!!event.result)
-  : event.rolls
+  : event.rounds.length * 2 - Number(!event.ready)
 
 const playEvent = (save, hero, progress, node, command, random) => {
   const event = node.side ? progress.side.game : progress.event
   if (!event) return
   if (node.type === 'battle' && command.turn !== event.turn) return
-  if (node.type !== 'battle' && command.turn !== undefined && command.turn !== trialTurn(node.type, event)) return
+  if (node.type === 'dice' && command.turn !== trialTurn('dice', event)) return
+  if (node.type === 'blackjack' && command.turn !== undefined && command.turn !== trialTurn('blackjack', event)) return
   const { action, index } = command
   let next = event
   if (node.type === 'battle')
     next = playBattle(event, hero, progress, action, index, random)
   if (node.type === 'blackjack') next = playBlackjack(event, action, random)
-  if (node.type === 'dice') next = playDice(event, action, index, random)
+  if (node.type === 'dice') next = playDice(event, action, random)
   if (next === event) return
   if (node.side) progress.side.game = next
   else progress.event = next
@@ -78,6 +75,7 @@ const playEvent = (save, hero, progress, node, command, random) => {
     if (next.cinematic)
       grant(save, hero, progress, 'jackpot', { achievement: 'jackpot' })
   }
+  return true
 }
 
 const finishEvent = (save, hero, progress, node) => {
@@ -153,10 +151,6 @@ export const applyCommand = (current, command, random = Math.random) => {
     save.activeHero = hero.id
     return save
   }
-  if (command.type === 'settings' && typeof command.autoSpin === 'boolean') {
-    save.settings.autoSpin = command.autoSpin
-    return save
-  }
   const hero = heroes[save.activeHero]
   if (!hero || command.hero !== hero.id) return current
   const progress = save.heroes[hero.id]
@@ -170,7 +164,7 @@ export const applyCommand = (current, command, random = Math.random) => {
       choose(save, hero, progress, node, command, random)
       break
     case 'play':
-      playEvent(save, hero, progress, node, command, random)
+      if (!playEvent(save, hero, progress, node, command, random)) return current
       break
     case 'travel':
       if (!canTravel(hero, progress, command.location)) return current

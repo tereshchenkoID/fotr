@@ -5,10 +5,6 @@
   .title {
     font-size: clamp(2rem, 6vw, 3.8rem);
   }
-
-  .overview {
-    color: var(--muted);
-  }
 }
 
 .panel {
@@ -33,50 +29,11 @@
   }
 }
 
-.grid,
-.profile {
+.grid {
   display: grid;
   gap: var(--gap);
 
   @include tab-s {
     grid-template-columns: repeat(3, minmax(0.1rem, 1fr));
   }
-}
-
-.profile {
-  @include tab-s {
-    grid-template-columns: 1fr 2fr;
-  }
-
-  .portrait {
-    inline-size: 100%;
-    block-size: auto;
-    max-block-size: 26rem;
-    object-fit: cover;
-    object-position: 50% 25%;
-  }
-
-  .meter {
-    inline-size: 100%;
-  }
-}
-
-.actions {
-  @include flex($align-items: center, $wrap: wrap);
-
-  gap: 0.65rem;
-
-  .stat {
-    @include flex($align-items: center);
-
-    gap: 0.4rem;
-    color: var(--gold);
-  }
-}
-
-.bonuses {
-  display: grid;
-  gap: 0.25rem;
-  margin-block: 0;
-  color: var(--gold);
 }

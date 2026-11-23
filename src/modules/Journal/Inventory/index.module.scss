@@ -1,0 +1,141 @@
+.block,
+.panel,
+.filter,
+.details,
+.copy {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.block {
+  @include tab-s {
+    grid-template-columns: minmax(12rem, 0.75fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}
+
+.panel {
+  @include panel;
+
+  padding: clamp(0.7rem, 3vw, 1.3rem);
+}
+
+.heading {
+  @include flex(
+    $justify-content: space-between,
+    $align-items: end,
+    $wrap: wrap
+  );
+
+  gap: 0.75rem;
+}
+
+.meta,
+.filter {
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
+.filter {
+  gap: 0.2rem;
+
+  .select {
+    padding: 0.45rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: var(--text);
+  }
+}
+
+.slots,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  gap: 0.45rem;
+}
+
+.grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 7rem), 1fr));
+}
+
+.slot,
+.item {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.3rem;
+  padding: 0.65rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at top, #4636236e, #141a22 75%);
+  text-align: center;
+  color: var(--text);
+
+  &[data-rarity='rare'] {
+    border-color: #7c9caa;
+  }
+
+  &[data-rarity='legendary'] {
+    border-color: var(--gold);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--gold-bright);
+    box-shadow: inset 0 0 0 1px var(--gold-bright);
+  }
+
+  @include hover {
+    &[aria-pressed]:hover {
+      background-color: #2a251e;
+      color: var(--gold-bright);
+    }
+  }
+}
+
+.slot:not([aria-pressed]) {
+  min-block-size: 5rem;
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.art {
+  inline-size: 3.35rem;
+  block-size: 3.35rem;
+  object-fit: contain;
+}
+
+.itemName {
+  overflow-wrap: anywhere;
+}
+
+.equipped {
+  font-size: 0.76rem;
+  color: var(--gold-bright);
+}
+
+.details {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.copy {
+  justify-items: start;
+  gap: 0.3rem;
+}
+
+.bonuses {
+  @include reset-list;
+
+  font-size: 0.85rem;
+}
+
+.delta {
+  color: #ffbca7;
+
+  &[data-positive='true'] {
+    color: #bce6aa;
+  }
+}

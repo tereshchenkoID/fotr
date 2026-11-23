@@ -70,16 +70,14 @@ const applyEffects = (
   const bonus = effects.critical && random() < 0.35 ? effects.critical : 0
   const damage = (effects.damage || 0) + (effects.magic || 0) + bonus
   const next = damageEnemy(battle, Math.min(damage, damageLimit))
+  const weaken = Math.max(next.statuses.weaken || 0, effects.curse || 0)
   return {
     ...next,
     criticalHit: !!bonus,
     hp: Math.min(stats.hp, battle.hp + (effects.heal || 0)),
     shield: Math.min(40, battle.shield + (effects.shield || 0)),
     focus: Math.min(10, battle.focus + (effects.focus || 0)),
-    statuses: {
-      ...next.statuses,
-      weaken: Math.max(next.statuses.weaken || 0, effects.curse || 0),
-    },
+    statuses: weaken ? { ...next.statuses, weaken } : next.statuses,
   }
 }
 
@@ -169,8 +167,8 @@ const tick = (battle, hero, stats, random, quick = false) => {
         1,
         enemy.attack + phaseAttack - stats.defense - (weakened ? 5 : 0)
       ) + burn
-  const damage = Math.max(0, incoming - next.shield)
-  const hp = Math.max(0, next.hp - damage)
+  const damage = Math.min(next.hp, Math.max(0, incoming - next.shield))
+  const hp = next.hp - damage
   return withFeedback(battle, {
     ...next,
     hp,

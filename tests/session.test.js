@@ -12,6 +12,7 @@ import {
   applyCommand,
   initialSave,
   sceneFor,
+  trialTurn,
 } from '../src/game/core/session.js'
 import { canTravel, getNode } from '../src/game/core/story.js'
 import { createIndexedStorage } from '../src/services/indexed-storage.js'
@@ -31,13 +32,37 @@ const step = (save, type, props, random = () => 0.99) =>
 const start = (id) => applyCommand(initialSave(), { type: 'select', id })
 const encounter = (save) => step(step(save, 'advance'), 'advance')
 const choose = (save, action) => step(save, 'choose', { action })
-const roll = (save) => step(save, 'play', { action: 'roll' })
+const diceCommand = (save, action, random) => step(save, 'play', {
+  action,
+  turn: trialTurn('dice', active(save).event),
+}, random)
+const roll = (save) => {
+  let calls = 0
+  return diceCommand(save, 'roll', () => calls++ < 5 ? 0.99 : 0)
+}
+const winDuel = (save) => {
+  while (!active(save).event.result)
+    save = active(save).event.ready ? roll(save) : diceCommand(save, 'next')
+  return save
+}
 const keys = (value, path = '') =>
   Object.entries(value).flatMap(([key, entry]) =>
     typeof entry === 'string' ? [path + key] : keys(entry, path + key + '.')
   )
 
 describe('Story graph', () => {
+  it('places Azog at the Battle of the Five Armies and Smaug at Erebor', () => {
+    for (const hero of Object.values(heroes).filter(({ route }) => route.includes('five'))) {
+      const chapter = hero.route.indexOf('five')
+      expect(stories[hero.id][`${hero.storyId}-${chapter}.battle`]).toMatchObject({
+        boss: true, enemy: 'azog',
+      })
+    }
+    const thorin = heroes.thorin
+    expect(stories.thorin[`${thorin.storyId}-${thorin.route.indexOf('erebor')}.battle`])
+      .toMatchObject({ boss: true, enemy: 'dragon' })
+  })
+
   it('has connected paths and localized content for all 18 heroes and three campaigns', () => {
     expect(Object.keys(campaigns)).toHaveLength(3)
     expect(Object.keys(heroes)).toHaveLength(18)
@@ -88,9 +113,9 @@ describe('Story graph', () => {
           expect(active(save).event.result).toBe('win')
         } else {
           save = choose(save, 'dice')
-          expect(active(save).event).toMatchObject({ dice: [], rolls: 3 })
+          expect(active(save).event).toMatchObject({ rounds: [], ready: true })
           expect(validateSave(save)).toEqual(save)
-          save = step(roll(save), 'play', { action: 'score' })
+          save = winDuel(save)
           expect(active(save).event.result).toBe('win')
         }
         expect(validateSave(save)).toEqual(save)
@@ -119,13 +144,13 @@ describe('Story graph', () => {
     let save = encounter(start('frodo'))
     expect(active(choose(save, 'negotiate')).node).toBe(active(save).node)
     save = step(
-      step(roll(choose(save, 'dice')), 'play', { action: 'score' }),
+      winDuel(choose(save, 'dice')),
       'advance'
     )
     save = step(step(save, 'advance'), 'advance')
     save = encounter(step(save, 'travel', { location: 'bree' }))
     save = step(
-      step(roll(choose(save, 'dice')), 'play', { action: 'score' }),
+      winDuel(choose(save, 'dice')),
       'advance'
     )
     save = step(step(save, 'advance'), 'advance')
@@ -162,6 +187,30 @@ describe('Story graph', () => {
 })
 
 describe('Persisted sessions', () => {
+  it.each([2, 3])('loads a v%i Thorin save from the old final fight and preserves its victory', async (version) => {
+    const save = start('thorin')
+    const progress = active(save)
+    const chapter = hero(save).route.indexOf('five')
+    const checkpoint = `${hero(save).storyId}-${chapter}.choice`
+    Object.assign(progress, { location: 'five', chapter, node: checkpoint, checkpoint })
+    const legacy = choose(save, 'battle')
+    legacy.version = version
+    Object.assign(active(legacy).event, {
+      enemyId: 'dragon', enemyHp: 0, focus: 9, turn: 10,
+      phase: 2, statuses: { burn: 1, shift: 2 }, result: 'win',
+    })
+    const storage = createIndexedStorage(new IDBFactory())
+    const restored = await storage.replace(legacy)
+    expect(active(restored).event).toMatchObject({
+      enemyId: 'azog', enemyHp: 0, focus: 9, turn: 10,
+      phase: 2, statuses: { lock: 1, shift: 2 }, result: 'win',
+    })
+    expect(active(restored).event.statuses).not.toHaveProperty('burn')
+    const next = await storage.update((current) => step(current, 'advance'))
+    expect(node(next).type).toBe('reward')
+    expect(active(next).result).toBe('win')
+  })
+
   it('restores exact hero progress, active bonus games and in-flight battle results', async () => {
     const factory = new IDBFactory()
     const first = createIndexedStorage(factory)
@@ -170,9 +219,9 @@ describe('Persisted sessions', () => {
     )
     expect(
       active(await createIndexedStorage(factory).load()).event
-    ).toMatchObject({ dice: [], rolls: 3 })
+    ).toMatchObject({ rounds: [], ready: true })
     save = await first.update((current) =>
-      step(roll(current), 'play', { action: 'hold', index: 0 })
+      roll(current)
     )
     const snapshot = active(save)
     save = await first.update((current) =>
@@ -190,7 +239,7 @@ describe('Persisted sessions', () => {
     )
     expect(active(save)).toEqual(snapshot)
     save = await reload.update((current) => {
-      const scored = step(step(current, 'play', { action: 'score' }), 'advance')
+      const scored = step(winDuel(current), 'advance')
       return step(step(scored, 'advance'), 'side')
     })
     expect(active(save).side.active).toBe(true)
@@ -200,10 +249,15 @@ describe('Persisted sessions', () => {
   it('rejects repeated roll and hit commands with a stale turn after persistence', async () => {
     const storage = createIndexedStorage(new IDBFactory())
     const dice = await storage.update(() => choose(encounter(start('frodo')), 'dice'))
-    const rollCommand = command(dice, 'play', { action: 'roll', turn: 3 })
+    const rollCommand = command(dice, 'play', { action: 'roll', turn: 0 })
     await storage.update(current => applyCommand(current, rollCommand, () => 0.5))
     await storage.update(current => applyCommand(current, rollCommand, () => 0.25))
-    expect(active(await storage.load()).event.rolls).toBe(2)
+    const restored = await storage.load()
+    expect(active(restored).event.rounds).toHaveLength(1)
+    const next = command(restored, 'play', { action: 'next', turn: 1 })
+    const ready = await storage.update(current => applyCommand(current, next))
+    expect(active(ready).event.ready).toBe(true)
+    expect(await storage.update(current => applyCommand(current, next))).toEqual(ready)
 
     const cards = await storage.replace(step(choose(encounter(start('sauron')), 'blackjack'), 'play', { action: 'deal' }, () => 0))
     if (active(cards).event.result) throw new Error('Expected an active hand')
@@ -218,8 +272,8 @@ describe('Persisted sessions', () => {
     const first = createIndexedStorage(factory)
     const second = createIndexedStorage(factory)
     let save = await first.update(() => {
-      const trial = roll(choose(encounter(start('frodo')), 'dice'))
-      return step(step(trial, 'play', { action: 'score' }), 'advance')
+      const trial = winDuel(choose(encounter(start('frodo')), 'dice'))
+      return step(trial, 'advance')
     })
     const claim = command(save, 'advance')
     await Promise.all([
@@ -241,15 +295,43 @@ describe('Persisted sessions', () => {
     delete v1.heroes.bilbo.side
     const migrated = await storage.replace(v1)
     expect(migrated).toMatchObject({
-      version: 2,
-      settings: { autoSpin: false },
+      version: 3,
       heroes: { bilbo: { side: null } },
     })
+    expect(migrated).not.toHaveProperty('settings')
     const bad = { ...migrated, heroes: { bilbo: { node: 'invalid' } } }
     await expect(storage.replace(bad)).rejects.toThrow('save-invalid')
-    await expect(storage.replace({ ...migrated, version: 3 })).rejects.toThrow(
+    await expect(storage.replace({ ...migrated, version: 4 })).rejects.toThrow(
       'save-version'
     )
     expect(await storage.load()).toEqual(migrated)
   })
+  it('migrates v2 Dice and preserves completed outcomes, side quests and claims', () => {
+    const v2 = choose(encounter(start('frodo')), 'dice')
+    v2.version = 2
+    v2.settings = { autoSpin: true }
+    active(v2).event = { dice: [1, 2, 3, 4, 5], held: [1], rolls: 1, modifier: 1, result: null }
+    active(v2).side = { active: false, type: 'dice', game: {
+      dice: [6, 6, 6, 6, 6], held: [], rolls: 2, modifier: 0, result: 'win', score: 60, combination: 'five',
+    } }
+    active(v2).claimed = ['side']
+    const migrated = validateSave(v2)
+    expect(active(migrated)).toMatchObject({
+      node: active(v2).node,
+      event: { rounds: [], ready: true, result: null },
+      side: { active: false, game: { rounds: [], ready: false, result: 'win', legacy: true } },
+      claimed: ['side'],
+    })
+    expect(migrated).not.toHaveProperty('settings')
+  })
+
+  it('restores multi-line enemy weakening from IndexedDB', async () => {
+    const factory = new IDBFactory()
+    const first = createIndexedStorage(factory)
+    const battle = choose(encounter(start('gandalf')), 'battle')
+    const save = await first.update(() => step(battle, 'play', { action: 'spin', turn: 0 }, () => 0.99))
+    expect(active(save).event.statuses.weaken).toBe(15)
+    expect(await createIndexedStorage(factory).load()).toEqual(save)
+  })
+
 })

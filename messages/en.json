@@ -12,7 +12,7 @@
     "story": "Story",
     "battle": "Slots Combat",
     "blackjack": "Blackjack",
-    "dice": "Dice",
+    "dice": "Dice Duel",
     "inventory": "Inventory",
     "profile": "Hero profile",
     "achievements": "Achievements",
@@ -89,7 +89,7 @@
   "rules": {
     "battle": "Match symbols across five lines to deal damage, shield or heal. Spend Focus to hold reels or use your hero’s ability.",
     "blackjack": "Get closer to 21 than the dealer without going over. Aces count as 1 or 11. The dealer draws to 17.",
-    "dice": "Roll five dice up to three times. After each throw, you can hold dice and reroll the rest. Score at least 24 points to win."
+    "dice": "Roll five dice against an opponent. The higher total after three rounds wins. Ties go to extra rounds."
   },
   "game": {
     "loading": "Loading your chronicle…",
@@ -175,8 +175,6 @@
     "log": "Dealt {attack} damage · Took {damage} damage",
     "shield": "Shield {value}",
     "attack": "Attack now",
-    "pause": "Pause auto-spin",
-    "startAuto": "Start auto-spin",
     "cooldown": "Ready in {value}",
     "guard": "Guard · 2",
     "convert": "Shape a symbol · 3",
@@ -206,10 +204,6 @@
     "hidden": "Hidden card",
     "hit": "Hit",
     "stand": "Stand",
-    "die": "Die {index}, face {value}",
-    "score": "{score} points · Story bonus {modifier}",
-    "roll": "Reroll · {count} left",
-    "lockScore": "Accept score",
     "mainwin": "The challenge is won. Collect your reward and continue.",
     "mainloss": "You can continue the journey with a smaller coin reward.",
     "maindraw": "Your opponent offers safe passage.",
@@ -221,9 +215,6 @@
       "hobbit": "The company keeps its supplies in a chest locked by a set of carved dice.",
       "power": "The watch captain uses five carved stones to test anyone seeking the forge’s seal."
     },
-    "unrolledDie": "Die {index}, waiting for the first throw",
-    "awaitingRoll": "Throw the dice to see your score.",
-    "firstRoll": "Roll · {count} left",
     "dealers": {
       "tavern": "Innkeeper",
       "hall": "Hall steward",
@@ -231,16 +222,6 @@
       "dark": "Shadow warden"
     },
     "bust": "Bust"
-  },
-  "diceCombinations": {
-    "five": "Five of a kind",
-    "four": "Four of a kind",
-    "house": "Full house",
-    "straight": "Straight",
-    "three": "Three of a kind",
-    "twoPair": "Two pairs",
-    "pair": "Pair",
-    "high": "High dice"
   },
   "inventory": {
     "slots": "Equipped · {value}/2",
@@ -250,21 +231,17 @@
     "legendary": "Legendary",
     "remove": "Unequip",
     "equip": "Equip",
-    "ability": "Ability · {name}",
-    "combo": "Signature combo · {symbol} × 3",
     "influence": "Influence {influence} · Corruption {corruption}",
     "unlocked": "Earned",
     "locked": "Unearned"
   },
   "settings": {
-    "combat": "Combat preferences",
-    "autoSpin": "Show auto-spin control in combat",
     "saves": "Saved adventures",
-    "local": "All heroes and settings are saved in this browser. Export a copy to keep a backup.",
+    "local": "All hero progress is saved in this browser. Export a copy to keep a backup.",
     "export": "Export save",
     "import": "Import save",
     "reset": "Reset progress",
-    "confirmReset": "Reset every hero, item, achievement and setting in this browser?",
+    "confirmReset": "Reset every hero, item and achievement in this browser?",
     "confirmImport": "Replace the progress in this browser with the selected save?"
   },
   "items": {
@@ -319,6 +296,7 @@
     "vanguard": "Vanguard of the Gate",
     "balrog": "Flame of the Deep",
     "dragon": "Smaug",
+    "azog": "Azog",
     "warlord": "War chief",
     "wardens": "Warden of the Forge"
   },
@@ -658,5 +636,66 @@
     "critical": "Critical hit",
     "phase": "The boss changes phase",
     "cost": "Costs {value} Focus"
+  },
+  "duel": {
+    "total": "Total {score}",
+    "face": "Face {value}",
+    "round": "Round {round} of {total}",
+    "extra": "Extra round {round}",
+    "roll": "Roll dice",
+    "next": "Next round",
+    "awaiting": "Roll to start the round.",
+    "playerRolling": "You are rolling…",
+    "opponentRolling": "Your opponent is rolling…",
+    "roundTie": "This round is tied.",
+    "roundWin": "You won the round by {difference}.",
+    "roundLoss": "Your opponent won the round by {difference}.",
+    "tied": "The total is tied.",
+    "playerLeads": "You lead by {difference}.",
+    "opponentLeads": "Your opponent leads by {difference}.",
+    "history": "Round results",
+    "roundColumn": "Round"
+  },
+  "journal": {
+    "attributes": "Attributes",
+    "baseBonus": "Base {base} · Gear {bonus}",
+    "ability": "Signature ability",
+    "availability": "Ready with {cost} Focus. Cooldown is {turns} turns.",
+    "jackpot": "Signature jackpot",
+    "jackpotRule": "Match at least {count} × {symbol} in a row on a payline.",
+    "story": "Story progress",
+    "chapter": "Chapter {chapter} of {total}",
+    "equipped": "Equipped",
+    "artifacts": "Artifacts",
+    "emptySlot": "Empty slot",
+    "filter": "Filter by bonus",
+    "all": "All artifacts",
+    "noItems": "No artifacts match this filter.",
+    "equipmentBlocked": "Equipment is locked during an encounter.",
+    "slotsFull": "Both equipment slots are filled.",
+    "damage": "Deals {value} damage",
+    "shield": "Adds {value} shield",
+    "heal": "Restores {value} HP",
+    "focus": "Restores {value} Focus",
+    "magic": "Deals {value} magic damage",
+    "curse": "Weakens the enemy for {value} turns",
+    "critical": "35% chance for {value} extra damage"
+  },
+  "combatUi": {
+    "help": "Battle help",
+    "combat": "Combat actions",
+    "reel": "Reel actions",
+    "focus": "Focus required: {value}.",
+    "busy": "Unavailable during the current action.",
+    "shieldFull": "Shield is full.",
+    "transformBlocked": "No reel is eligible for transformation.",
+    "holdLimit": "Two reels are already held.",
+    "line": "Line {line}: {symbol} × {count} · {effect}",
+    "damage": "Attack",
+    "shield": "Shield",
+    "heal": "Heal",
+    "focusEffect": "Focus",
+    "magic": "Magic",
+    "curse": "Weaken"
   }
 }

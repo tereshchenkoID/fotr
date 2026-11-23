@@ -46,7 +46,9 @@ const addChapter = (graph, hero, location, chapter) => {
     final ||
     (hero.id === 'gandalf' && location === 'moria') ||
     (hero.id === 'thorin' && location === 'erebor')
-  const enemy = boss ? hero.boss : locationEnemy[location] || 'scout'
+  const enemy = location === 'five'
+    ? 'azog'
+    : boss ? hero.boss : locationEnemy[location] || 'scout'
   const add = (type, properties) => {
     const id = nodeId(type)
     graph[id] = { id, type, location, chapter, ...properties }

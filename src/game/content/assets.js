@@ -11,6 +11,7 @@ export const locationArt = {
 }
 
 export const enemyArt = {
+  azog: '/art/warlord.webp',
   dragon: '/art/dragon.webp',
   spider: '/art/spider.webp',
   wrath: '/art/wrath.webp',

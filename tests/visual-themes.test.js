@@ -21,6 +21,7 @@ import {
   cardArrivalDelay,
   dealerRevealTime,
   getDealDuration,
+  getRevealDelay,
 } from '../src/modules/Trials/Blackjack/motion.js'
 
 const hasImage = (url) =>
@@ -100,6 +101,14 @@ describe('Visual identity', () => {
 })
 
 describe('Animation timing', () => {
+  it('lets the last opening card land and flip before showing a natural blackjack result', () => {
+    const before = { player: [], dealer: [], result: null }
+    const after = { player: ['A', 'K'], dealer: ['4', '6'], result: 'win' }
+    const landing = cardArrivalDelay(before, after, true, 1) + cardArrival
+    expect(getRevealDelay(before, after)).toBe(landing)
+    expect(getDealDuration(before, after)).toBeGreaterThan(landing + dealerRevealTime)
+  })
+
   it('starts and lands each reel on its exact respective engine column', () => {
     const hero = heroes.legolas
     const progress = newProgress(hero)

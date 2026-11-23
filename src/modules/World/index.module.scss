@@ -134,17 +134,22 @@
   inline-size: 2.55rem;
   place-items: center;
 
-  .dot {
-    inline-size: 0.68rem;
-    aspect-ratio: 1;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    background: #181519;
-    box-shadow: 0 0 0 2px #18151988;
+  &[data-state='visited'] {
+    background: #363627de;
+    color: #e7cb8c;
   }
 
-  &[data-state='visited'] .dot {
-    background: #cfab67;
+  &[data-state='locked'] {
+    background: #191a1dce;
+    color: #dbd3c0;
+  }
+
+  &[data-special='boss'] .markerBadge {
+    color: #ffd2b6;
+  }
+
+  &[data-special='side'] .markerBadge {
+    color: #c6e7d9;
   }
 
   &[data-state='here'],
@@ -155,6 +160,46 @@
     box-shadow: 0 0 16px #e0ad6966;
     z-index: 1;
   }
+
+  &:focus-visible {
+    z-index: 4;
+
+    .tooltip {
+      display: block;
+    }
+  }
+
+  @include hover {
+    &:hover {
+      z-index: 4;
+
+      .tooltip {
+        display: block;
+      }
+    }
+  }
+}
+
+.markerBadge {
+  position: absolute;
+  inset-block-start: -0.3rem;
+  inset-inline-end: -0.2rem;
+  border-radius: 0.2rem;
+  background: #161b21;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  inset-block-end: 100%;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--gold-dark);
+  border-radius: var(--radius);
+  background: var(--ink);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--text);
+  pointer-events: none;
 }
 
 .details {

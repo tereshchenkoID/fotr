@@ -103,6 +103,15 @@ export const enemies = {
       { at: 0.34, effect: 'shift', attack: 3 },
     ],
   },
+  azog: {
+    hp: 86,
+    attack: 14,
+    defense: 4,
+    phases: [
+      { at: 0.7, effect: 'lock', attack: 2 },
+      { at: 0.34, effect: 'shift', attack: 3 },
+    ],
+  },
   warlord: {
     hp: 80,
     attack: 13,

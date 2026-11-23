@@ -82,7 +82,7 @@ const ContextScene = ({ scene, save, send }) => {
   if (redirect) return <Loading />
   const command = (data) => send({ hero: hero.id, node: node.id, ...data })
   const props = { hero, progress, node, save, command }
-  if (scene === 'world') return <World {...props} />
+  if (scene === 'world') return <World key={hero.id} {...props} />
   if (scene === 'story') return <Story {...props} />
   if (scene === 'battle')
     return <Battle key={`${hero.id}:${node.id}`} {...props} />

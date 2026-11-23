@@ -10,7 +10,12 @@ import Action from '@/components/Action'
 
 import TrialOutcome from '../TrialOutcome'
 
-import { cardArrival, cardArrivalDelay, getDealDuration } from './motion'
+import {
+  cardArrival,
+  cardArrivalDelay,
+  getDealDuration,
+  getRevealDelay,
+} from './motion'
 
 import style from './index.module.scss'
 
@@ -58,12 +63,12 @@ const PlayingCard = ({ card, hidden, delay }) => {
   )
 }
 
-const Hand = ({ event, before, dealer, table }) => {
+const Hand = ({ event, before, dealer, table, waitingReveal }) => {
   const t = useTranslations('trials')
   const key = dealer ? 'dealer' : 'player'
   const cards = event[key]
   const shown = before || event
-  const covered = dealer && (!event.result || (before && !before.player.length))
+  const covered = dealer && (!event.result || waitingReveal)
   const visible = dealer && !shown.result ? shown[key].slice(0, 1) : shown[key]
   const total = handValue(visible)
   const tone = natural(visible) ? 'natural' : total > 21 ? 'bust' : undefined
@@ -94,7 +99,9 @@ const Hand = ({ event, before, dealer, table }) => {
 const Blackjack = ({ event, play, busy, result, visuals }) => {
   const t = useTranslations('trials')
   const started = event.player.length > 0
-  const before = useTurnAnimation(event, trialTurn('blackjack', event), getDealDuration, true)
+  const turn = trialTurn('blackjack', event)
+  const before = useTurnAnimation(event, turn, getDealDuration, true)
+  const waitingReveal = !!useTurnAnimation(event, turn, getRevealDelay, true)
   const dealing = !!before
   const outcome = dealing ? null : event.result
   const locked = busy || dealing
@@ -114,7 +121,7 @@ const Blackjack = ({ event, play, busy, result, visuals }) => {
   return (
     <>
       <div ref={table} className={style.block} aria-busy={dealing} data-card-back={visuals.theme.material}>
-        <Hand event={event} before={before} dealer table={visuals.table} />
+        <Hand event={event} before={before} dealer table={visuals.table} waitingReveal={waitingReveal} />
         <div className={style.divider} aria-hidden>
           <span className={style.deck} ref={deck}><Orbit size={22} strokeWidth={1.35} /></span>
         </div>

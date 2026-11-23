@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl'
 import { Dices, Layers } from 'lucide-react'
 
 import { useGame } from '@/store/game'
+import { enemyArt } from '@/game/content/assets'
 import { resolveTrialVisuals } from '@/game/content/visual-themes'
 import { trialTurn } from '@/game/core/session'
 
@@ -43,7 +44,17 @@ const Trials = ({ hero, progress, node, command }) => {
       {cards ? (
         <Blackjack event={event} play={play} busy={busy} result={result} visuals={visuals} />
       ) : (
-        <Dice event={event} play={play} busy={busy} material={visuals.theme.material} result={result} />
+        <Dice
+          event={event}
+          play={play}
+          busy={busy}
+          material={visuals.theme.material}
+          heroName={t(hero.nameKey)}
+          opponent={node.enemy
+            ? { name: t(`enemies.${node.enemy}`), portrait: enemyArt[node.enemy] }
+            : { name: t(`trials.dealers.${visuals.table}`) }}
+          result={result}
+        />
       )}
     </VisualScene>
   )

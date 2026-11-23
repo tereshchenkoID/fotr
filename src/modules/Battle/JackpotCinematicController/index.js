@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Sparkles } from 'lucide-react'
 
+import { symbolFallback } from '@/game/content/visual-themes'
+
 import Action from '@/components/Action'
 
 import CombatEffect from '../CombatEffect'
@@ -22,7 +24,7 @@ const JackpotCinematicController = ({ hero, visuals, damage, onDismiss }) => {
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches
-    const reveal = reduced ? 0 : 520
+    const reveal = reduced ? 0 : 660
     const entrance = window.setTimeout(() => element.showModal(), reveal)
     const timer = window.setTimeout(
       () => dismiss.current(),
@@ -54,7 +56,10 @@ const JackpotCinematicController = ({ hero, visuals, damage, onDismiss }) => {
           fill
           sizes="(max-width: 768px) 90vw, 650px"
         />
-        <Image className={style.relic} src={visuals.symbols[visuals.cinematicRelic].image} alt="" width={128} height={128} />
+        <Image className={style.relic} src={visuals.symbols[visuals.cinematicRelic]?.image || symbolFallback} alt="" width={128} height={128}
+          onError={({ currentTarget }) => {
+            if (!currentTarget.src.endsWith(symbolFallback)) currentTarget.src = symbolFallback
+          }} />
         <CombatEffect large effect={visuals.effects.jackpot} />
       </div>
       <div className={style.cinematicCopy}>

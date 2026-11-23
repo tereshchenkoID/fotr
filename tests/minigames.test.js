@@ -12,7 +12,9 @@ import {
   playBlackjack,
   startBlackjack,
 } from '../src/game/minigames/blackjack.js'
-import { playDice, scoreDice, startDice } from '../src/game/minigames/dice.js'
+import {
+  duelTotals, playDice, startDice, sumDice
+} from '../src/game/minigames/dice.js'
 import {
   findCombinations,
   generateGrid,
@@ -78,41 +80,45 @@ describe('Blackjack', () => {
   })
 })
 
-describe('Dice', () => {
-  it.each([
-    [[2, 2, 2, 2, 2], 'five', 40],
-    [[4, 4, 4, 4, 1], 'four', 35],
-    [[4, 4, 4, 2, 2], 'house', 31],
-    [[6, 2, 4, 3, 5], 'straight', 36],
-    [[3, 3, 3, 2, 1], 'three', 21],
-    [[1, 1, 5, 5, 6], 'twoPair', 25],
-    [[1, 1, 3, 4, 6], 'pair', 19],
-    [[1, 2, 3, 4, 6], 'high', 16],
-  ])('scores %j as %s', (dice, combination, score) => {
-    expect(scoreDice(dice)).toEqual({ combination, score })
+describe('Dice Duel', () => {
+  const round = (game, player, opponent) => {
+    let calls = 0
+    return playDice(playDice(game, 'next'), 'roll', () => calls++ < 5 ? player : opponent)
+  }
+
+  it('sums ordinary faces and caps a round at 30', () => {
+    expect(sumDice([1, 2, 3, 4, 6])).toBe(16)
+    expect(sumDice([6, 6, 6, 6, 6])).toBe(30)
   })
 
-  it('preserves held dice, limits rerolls and applies a story modifier', () => {
-    let game = startDice(2)
-    expect(game).toMatchObject({ dice: [], rolls: 3, result: null })
-    expect(playDice(game, 'hold', 2)).toBe(game)
-    expect(playDice(game, 'score')).toBe(game)
-    game = playDice(game, 'roll', null, zero)
-    expect(game).toMatchObject({
-      dice: [1, 1, 1, 1, 1],
-      rolls: 2,
-      result: null,
-    })
-    game = playDice(game, 'hold', 2)
-    game = playDice(game, 'roll', null, high)
-    expect(game).toMatchObject({ dice: [6, 6, 1, 6, 6], held: [2], rolls: 1 })
-    game = playDice(game, 'roll', null, high)
-    expect(playDice(game, 'roll')).toBe(game)
-    expect(playDice(game, 'score')).toMatchObject({
-      result: 'win',
-      score: 45,
-      combination: 'four',
-    })
+  it.each([[0.99, 0, 'win'], [0, 0.99, 'loss']])(
+    'compares three rounds and returns %s against %s as %s',
+    (player, opponent, result) => {
+      let game = startDice()
+      for (let index = 0; index < 3; index++) {
+        game = round(game, player, opponent)
+        expect(game.result).toBe(index === 2 ? result : null)
+        expect(playDice(game, 'roll')).toBe(game)
+      }
+      expect(duelTotals(game.rounds)).toEqual({
+        player: result === 'win' ? 90 : 15,
+        opponent: result === 'win' ? 15 : 90,
+      })
+      expect(playDice(game, 'next')).toBe(game)
+    }
+  )
+
+  it('keeps playing tiebreaks until a round breaks the cumulative tie', () => {
+    let game = round(startDice(), 0.99, 0)
+    game = round(game, 0, 0.99)
+    game = round(game, 0.5, 0.5)
+    expect(game).toMatchObject({ ready: false, result: null })
+    game = round(game, 0.25, 0.25)
+    expect(game.rounds).toHaveLength(4)
+    expect(game.result).toBeNull()
+    game = round(game, 0.99, 0)
+    expect(game.rounds).toHaveLength(5)
+    expect(game.result).toBe('win')
   })
 })
 
@@ -182,4 +188,30 @@ describe('Slots and combat', () => {
     expect(normal.focus).toBeGreaterThan(base.focus)
     expect(quick).toMatchObject({ focus: 5, hp: base.hp })
   })
+  it('applies weakness to the enemy, a boss curse to the hero and removes expired statuses', () => {
+    const wizard = heroes.gandalf
+    const state = newProgress(wizard)
+    const base = { ...startBattle(wizard, state, 'wrath', high), focus: 6 }
+    const cast = playBattle(base, wizard, state, 'ability', null, high)
+    expect(cast.statuses).toEqual({ weaken: 2 })
+    const ordinary = () => 0.45
+    const normal = playBattle(base, wizard, state, 'spin', null, ordinary)
+    const weakened = playBattle({ ...base, statuses: { weaken: 1 } }, wizard, state, 'spin', null, ordinary)
+    const cursed = playBattle({ ...base, statuses: { curse: 1 } }, wizard, state, 'spin', null, ordinary)
+    expect(weakened.log).toEqual({ attack: normal.log.attack, damage: normal.log.damage - 5 })
+    expect(cursed.log).toEqual({ attack: normal.log.attack - 3, damage: normal.log.damage })
+    expect(weakened.statuses).not.toHaveProperty('weaken')
+    expect(cursed.statuses).not.toHaveProperty('curse')
+  })
+
+  it('reports actual HP lost on lethal damage and clamps absorbed damage', () => {
+    const base = startBattle(hero, progress, 'scout', high)
+    const killed = playBattle({ ...base, hp: 1 }, hero, progress, 'spin', null, high)
+    expect(killed).toMatchObject({ hp: 0, result: 'loss', log: { damage: 1 }, feedback: { damage: 1 } })
+    const blocked = playBattle({ ...base, shield: 40 }, hero, progress, 'spin', null, high)
+    expect(blocked.hp).toBe(base.hp)
+    expect(blocked.log.damage).toBe(0)
+    expect(blocked.shield).toBeLessThan(40)
+  })
+
 })

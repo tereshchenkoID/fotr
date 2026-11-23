@@ -3,6 +3,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import {
   Backpack,
   BookOpen,
+  Check,
   Flag,
   Lock,
   MapPin,
@@ -38,11 +39,12 @@ const World = ({ hero, progress, node, command }) => {
   const target = locations[selected || progress.location]
   const canEnter = canTravel(hero, progress, target.id)
   const current = target.id === progress.location
-  const chapter = hero.route.indexOf(target.id)
-  const boss = stories[hero.id][`${chapterKey(hero, chapter)}.choice`]?.boss
+  const bossAt = (id) => stories[hero.id][`${chapterKey(hero, hero.route.indexOf(id))}.choice`]?.boss
+  const boss = bossAt(target.id)
   const showObjective = (current || canEnter) && node.type !== 'end'
   const pending = current && node.type === 'reward'
-  const camp = current && node.type === 'camp' && !progress.side
+  const sideAt = (id) => id === progress.location && (progress.side?.active || (node.type === 'camp' && !progress.side))
+  const camp = sideAt(target.id)
 
   useEffect(() => {
     const frame = viewport.current
@@ -116,7 +118,7 @@ const World = ({ hero, progress, node, command }) => {
             <button
               className={style.zoom}
               type="button"
-              onClick={() => setZoom(zoom - 1)}
+              onClick={() => setZoom((level) => Math.max(0, level - 1))}
               disabled={zoom === 0}
               aria-label={t('world.zoomOut')}
             >
@@ -125,7 +127,7 @@ const World = ({ hero, progress, node, command }) => {
             <button
               className={style.zoom}
               type="button"
-              onClick={() => setZoom(zoom + 1)}
+              onClick={() => setZoom((level) => Math.min(2, level + 1))}
               disabled={zoom === 2}
               aria-label={t('world.zoomIn')}
             >
@@ -171,32 +173,35 @@ const World = ({ hero, progress, node, command }) => {
                     .join(' ')}
                 />
               </svg>
-              {campaign.locationIds.map((id) => (
-                <button
-                  className={style.pin}
-                  type="button"
-                  key={id}
-                  style={{
-                    left: `${locations[id].x}%`,
-                    top: `${locations[id].y}%`,
-                  }}
-                  data-state={status(id)}
-                  aria-pressed={target.id === id}
-                  aria-label={`${locations[id].names[locale]} · ${t(`world.${status(id)}`)}`}
-                  title={locations[id].names[locale]}
-                  onClick={() => {
-                    if (!dragged.current) setSelected(id)
-                  }}
-                >
-                  {status(id) === 'here' ? (
-                    <MapPin size={19} />
-                  ) : status(id) === 'open' ? (
-                    <Flag size={15} />
-                  ) : (
-                    <span className={style.dot} />
-                  )}
-                </button>
-              ))}
+              {campaign.locationIds.map((id) => {
+                const state = status(id)
+                const special = sideAt(id) ? 'side' : bossAt(id) ? 'boss' : undefined
+                const Icon = { here: MapPin, open: Flag, visited: Check, locked: Lock }[state]
+                const marker = [
+                  locations[id].names[locale], t(`world.${state}`),
+                  special === 'side' ? t('story.side') : special === 'boss' ? t('battle.boss') : null,
+                ].filter(Boolean).join(' · ')
+                return (
+                  <button
+                    className={style.pin}
+                    type="button"
+                    key={id}
+                    style={{ left: `${locations[id].x}%`, top: `${locations[id].y}%` }}
+                    data-state={state}
+                    data-special={special}
+                    aria-pressed={target.id === id}
+                    aria-label={marker}
+                    onClick={(event) => {
+                      if (!dragged.current || event.detail === 0) setSelected(id)
+                    }}
+                  >
+                    <Icon size={state === 'locked' ? 12 : 17} aria-hidden />
+                    {special === 'side' && <BookOpen className={style.markerBadge} size={13} aria-hidden />}
+                    {special === 'boss' && <Swords className={style.markerBadge} size={13} aria-hidden />}
+                    <span className={style.tooltip} aria-hidden>{marker}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -256,7 +261,6 @@ const World = ({ hero, progress, node, command }) => {
           </label>
           {node.type === 'travel' && !canEnter && (
             <button
-              className={style.zoom}
               type="button"
               className={style.next}
               onClick={() => setSelected(hero.route[progress.chapter + 1])}

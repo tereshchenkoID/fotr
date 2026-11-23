@@ -98,10 +98,10 @@
   .line {
     fill: none;
     stroke: var(--accent);
-    stroke-opacity: 0.7;
+    stroke-opacity: 0.55;
     stroke-width: 2;
     stroke-dasharray: 1;
-    animation: reveal-line 260ms ease-out both;
+    animation: reveal-line 260ms ease-out var(--line-delay) both;
     vector-effect: non-scaling-stroke;
   }
 }

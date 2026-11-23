@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
-import { Shield, Sword, Zap } from 'lucide-react'
+import {
+  Flame, HelpCircle, Lock, Shield, Skull, Sparkles, Sword, Zap
+} from 'lucide-react'
 
 import { useTurnAnimation } from '@/hooks/useTurnAnimation'
 import { useGame } from '@/store/game'
@@ -21,7 +23,23 @@ import Reels, { getReelSpinDuration } from './Reels'
 
 import style from './index.module.scss'
 
-const Combatant = ({ name, portrait, hp, max, title, effect, reaction, phaseEffect, revision, figures, defeatedLabel }) => (
+const statusIcons = { burn: Flame, lock: Lock, curse: Skull, weaken: Sword, shift: Sparkles, shield: Shield }
+
+const BattleAction = ({ label, icon: Icon, reason, onClick }) => (
+  <Action
+    className={style.option}
+    variant="secondary"
+    aria-disabled={!!reason}
+    aria-label={reason ? `${label}. ${reason}` : undefined}
+    title={reason}
+    onClick={reason ? undefined : onClick}
+  >
+    {Icon && <Icon size={16} aria-hidden />}
+    {label}
+  </Action>
+)
+
+const Combatant = ({ name, portrait, hp, max, title, effect, reaction, phaseEffect, revision, figures, defeatedLabel, statuses, hit }) => (
   <div className={style.combatant} data-critical={reaction === 'critical'}>
     <div className={style.portrait}>
       <Image className={style.portraitImage}
@@ -31,6 +49,7 @@ const Combatant = ({ name, portrait, hp, max, title, effect, reaction, phaseEffe
         sizes="(max-width: 768px) 40vw, 230px"
       />
       {effect && <CombatEffect key={`effect-${revision}`} effect={effect} reaction={reaction} />}
+      {hit && <span className={style.hit} key={`hit-${revision}`} aria-hidden />}
       {phaseEffect && <CombatEffect key={`phase-${revision}`} effect={phaseEffect} reaction="phase" />}
       {defeatedLabel && (
         <div className={style.defeated}>
@@ -42,13 +61,27 @@ const Combatant = ({ name, portrait, hp, max, title, effect, reaction, phaseEffe
           {figures.map(([id, label]) => <li key={id} className={style.figure} data-kind={id}>{label}</li>)}
         </ul>
       )}
+      {statuses.length > 0 && (
+        <ul className={style.status}>
+          {statuses.map(([id, value, label]) => {
+            const Icon = statusIcons[id]
+            return (
+              <li key={id} className={style.statusItem} title={label} tabIndex={0}>
+                {Icon && <Icon size={15} aria-hidden />}
+                <span aria-hidden>{value}</span><span className={style.statusLabel}>{label}</span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
     <h2 className={style.combatantName}>{name}</h2>
-    <Meter label={title} value={hp} max={max} kind="health" />
+    <Meter className={style.health} label={title} value={hp} max={max} kind="health" />
+
   </div>
 )
 
-const Battle = ({ hero, progress, node, save, command }) => {
+const Battle = ({ hero, progress, node, command }) => {
   const t = useTranslations()
   const locale = useLocale()
   const visuals = resolveVisuals(hero, progress.location, node)
@@ -60,9 +93,11 @@ const Battle = ({ hero, progress, node, save, command }) => {
   )
   const battle = before || committed
   const victory = battle.result === 'win'
-  const statuses = Object.entries(battle.statuses).filter(
-    ([, value]) => value > 0
-  )
+  const statuses = Object.entries(battle.statuses)
+    .filter(([, value]) => value > 0)
+    .map(([id, value]) => [id, value, `${t(`statuses.${id}`)} · ${value}`])
+  const playerStatuses = statuses.filter(([id]) => id !== 'weaken')
+  if (battle.shield > 0) playerStatuses.push(['shield', battle.shield, t('battle.shield', { value: battle.shield })])
   const busy = useGame((state) => state.busy)
   const [initialRevision] = useState(committed.feedback?.revision ?? 0)
   const current = battle.feedback
@@ -82,27 +117,19 @@ const Battle = ({ hero, progress, node, save, command }) => {
     ? activeFeedback.critical ? 'critical' : activeFeedback.action === 'ability' ? 'ability' : 'attack'
     : null
   const phaseEffect = activeFeedback?.phaseChanged && phaseEffects[enemy.phases[battle.phase - 1]?.effect]
-  const [autoEnabled, setAutoEnabled] = useState(false)
   const ability = hero.abilities[0]
-  const auto = save.settings.autoSpin && autoEnabled
   const locked = busy || !!before || !!battle.result || battle.cinematic
+  const shortage = (value) => battle.focus < value ? t('combatUi.focus', { value }) : null
+  const blocked = locked ? t('combatUi.busy') : null
+  const enemyName = t(`enemies.${battle.enemyId}`)
   const play = (action, index) =>
     command({ type: 'play', action, index, turn: battle.turn })
-
-  useEffect(() => {
-    if (!auto || locked) return
-    const timeout = window.setTimeout(
-      () => command({ type: 'play', action: 'spin', turn: battle.turn }),
-      battle.turn ? 3100 : 3800
-    )
-    return () => window.clearTimeout(timeout)
-  }, [auto, locked, battle.turn, command])
 
   return (
     <VisualScene className={style.block} visuals={visuals}>
       <header className={style.heading}>
-        <p className={style.caption}>{locations[progress.location].names[locale]}{node.boss && ` · ${t('battle.boss')}`}</p>
-        <h1 className={style.title}>{t('nav.battle')}</h1>
+        <h1 className={style.title}>{locations[progress.location].names[locale]}</h1>
+        <p className={style.encounter}>{node.boss && `${t('battle.boss')} · `}{enemyName}</p>
         <p className={style.caption}>
           {t('battle.turn', { value: battle.turn })} ·{' '}
           {t('battle.phase', { value: battle.phase + 1 })}
@@ -120,11 +147,13 @@ const Battle = ({ hero, progress, node, save, command }) => {
             reaction={playerReaction}
             revision={revision}
             figures={figures(['damage', 'healing', 'blocked', 'shield', 'focus'])}
+            statuses={victory ? [] : playerStatuses}
+            hit={activeFeedback?.damage > 0}
           />
         </div>
         <div className={style.enemy}>
           <Combatant
-            name={t(`enemies.${battle.enemyId}`)}
+            name={enemyName}
             portrait={enemyArt[battle.enemyId] || art.enemy}
             hp={battle.enemyHp}
             max={enemy.hp}
@@ -134,6 +163,8 @@ const Battle = ({ hero, progress, node, save, command }) => {
             phaseEffect={phaseEffect}
             revision={revision}
             figures={figures(['attack'])}
+            statuses={victory ? [] : statuses.filter(([id]) => id === 'weaken')}
+            hit={activeFeedback?.attack > 0}
             defeatedLabel={victory ? t('battle.defeated') : undefined}
           />
         </div>
@@ -171,77 +202,58 @@ const Battle = ({ hero, progress, node, save, command }) => {
                 <Sword size={16} aria-hidden />
                 {t('battle.attack')}
               </Action>
-              {save.settings.autoSpin && (
-                <Action
-                  variant="secondary"
-                  onClick={() => setAutoEnabled(!autoEnabled)}
-                  disabled={battle.cinematic}
-                >
-                  {t(`battle.${auto ? 'pause' : 'startAuto'}`)}
-                </Action>
-              )}
-              <Action
-                variant="secondary"
-                disabled={
-                  locked || battle.focus < ability.cost || !!battle.cooldown
-                }
-                title={battle.cooldown ? t('battle.cooldown', { value: battle.cooldown }) : t('combatFeedback.cost', { value: ability.cost })}
-                onClick={() => play('ability')}
-              >
-                <Zap size={16} aria-hidden />
-                {t(`heroes.${hero.id}.ability`)} ·{' '}
-                {battle.cooldown
-                  ? t('battle.cooldown', { value: battle.cooldown })
-                  : ability.cost}
-              </Action>
-              <Action
-                variant="secondary"
-                disabled={locked || battle.focus < 2 || battle.shield >= 40}
-                title={t('combatFeedback.cost', { value: 2 })}
-                onClick={() => play('guard')}
-              >
-                {t('battle.guard')}
-              </Action>
-              <Action
-                variant="secondary"
-                disabled={locked || battle.focus < 3}
-                title={t('battle.rerollHelp')}
-                onClick={() => play('reroll')}
-              >
-                {t('battle.reroll')}
-              </Action>
-              <Action
-                variant="secondary"
-                disabled={locked || battle.focus < 3 || battle.held.length === 2 || convertTarget(battle) < 0}
-                title={t('combatFeedback.cost', { value: 3 })}
-                onClick={() => play('convert')}
-              >
-                {t('battle.convert')}
-              </Action>
+              <div className={style.actionGroup} role="group" aria-label={t('combatUi.combat')}>
+                <BattleAction
+                  label={`${t(`heroes.${hero.id}.ability`)} · ${ability.cost}`}
+                  reason={blocked || (battle.cooldown ? t('battle.cooldown', { value: battle.cooldown }) : shortage(ability.cost))}
+                  icon={Zap}
+                  onClick={() => play('ability')}
+                />
+                <BattleAction
+                  label={t('battle.guard')}
+                  reason={blocked || shortage(2) || (battle.shield >= 40 ? t('combatUi.shieldFull') : null)}
+                  onClick={() => play('guard')}
+                />
+              </div>
+              <div className={style.actionGroup} role="group" aria-label={t('combatUi.reel')}>
+                <BattleAction label={t('battle.reroll')} reason={blocked || shortage(3)} onClick={() => play('reroll')} />
+                <BattleAction
+                  label={t('battle.convert')}
+                  reason={blocked || shortage(3) || (battle.held.length === 2 ? t('combatUi.holdLimit') : null)
+                    || (convertTarget(battle) < 0 ? t('combatUi.transformBlocked') : null)}
+                  onClick={() => play('convert')}
+                />
+              </div>
             </div>
           )}
           {!victory && (
             <div className={style.details}>
-              <div className={style.log} aria-live="polite">
-                {activeFeedback?.critical && <strong className={style.notice}>{t('combatFeedback.critical')} · </strong>}
-                {activeFeedback?.phaseChanged && <strong className={style.notice}>{t('combatFeedback.phase')} · </strong>}
-                {battle.log ? t('battle.log', battle.log) : t('rules.battle')}
-              </div>
-              {(battle.shield > 0 || statuses.length > 0) && (
-                <div className={style.status}>
-                  {battle.shield > 0 && (
-                    <span className={style.statusItem}>
-                      <Shield size={15} aria-hidden />
-                      {t('battle.shield', { value: battle.shield })}
-                    </span>
-                  )}
-                  {statuses.map(([id, value]) => (
-                    <span key={id} className={style.statusItem}>
-                      {t(`statuses.${id}`)} · {value}
-                    </span>
-                  ))}
+              {(battle.log || activeFeedback?.phaseChanged) && (
+                <div className={style.log} aria-live="polite">
+                  {activeFeedback?.critical && <strong className={style.notice}>{t('combatFeedback.critical')} · </strong>}
+                  {activeFeedback?.phaseChanged && <strong className={style.notice}>{t('combatFeedback.phase')} · </strong>}
+                  {battle.log && t('battle.log', battle.log)}
                 </div>
               )}
+              {!before && battle.matches.length > 0 && (
+                <ul className={style.matches}>
+                  {battle.matches.map(({ line, symbol, count }) => {
+                    const effect = hero.slotConfig.pool.find(({ id }) => id === symbol)?.effect
+                    if (!effect) return null
+                    return (
+                      <li className={style.match} key={line} data-effect={effect}>
+                        {t('combatUi.line', { line: line + 1, symbol: t(`symbols.${symbol}`), count,
+                          effect: t(`combatUi.${effect === 'focus' ? 'focusEffect' : effect}`) })}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              <details className={style.help}>
+                <summary className={style.helpToggle}><HelpCircle size={15} aria-hidden />{t('combatUi.help')}</summary>
+                <p className={style.log}>{t('rules.battle')}</p>
+                <p className={style.log}>{t('battle.rerollHelp')}</p>
+              </details>
               {progress.equipped.length > 0 && (
                 <p className={style.equipped}>
                   {t('game.equipped')}:{' '}

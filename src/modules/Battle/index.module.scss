@@ -14,9 +14,13 @@
     color: var(--accent);
   }
 
+  .encounter {
+    color: var(--text);
+  }
+
   .title {
     margin-block: 0.3rem;
-    font-size: clamp(1.42rem, 3.5vw, 2.6rem);
+    font-size: clamp(1.25rem, 3vw, 2rem);
   }
 }
 
@@ -48,6 +52,10 @@
   padding: clamp(0.22rem, 0.9vw, 0.75rem);
   border-radius: 0.45rem;
   background: linear-gradient(0deg, #080c12ef, #080c1200 72%);
+
+  .health {
+    font-weight: 800;
+  }
 
   .combatantName {
     margin-block: 0.55rem;
@@ -120,21 +128,111 @@
 }
 
 .status,
-.actions {
+.actionGroup {
   @include flex($wrap: wrap);
 
   gap: 0.42rem;
 }
 
 .status {
-  .statusItem {
-    @include flex($align-items: center);
+  @include reset-list;
 
-    gap: 0.4rem;
-    padding: 0.15rem 0.45rem;
-    border: 1px solid var(--line);
-    font-size: 0.82rem;
-    color: var(--accent);
+  position: absolute;
+  inset-block-end: 0.25rem;
+  inset-inline-start: 0.3rem;
+  z-index: 4;
+}
+
+.statusItem {
+  @include flex($align-items: center);
+
+  gap: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--line);
+  background: #0d151eea;
+  font-size: 0.8rem;
+  color: var(--accent);
+
+  &:focus-visible .statusLabel {
+    inline-size: max-content;
+    block-size: auto;
+    inset-block: auto 100%;
+    padding: 0.15rem 0.35rem;
+    background: var(--ink);
+    clip-path: none;
+  }
+}
+
+.statusLabel {
+  @include absolute-filled;
+
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.option[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.helpToggle {
+  @include flex($align-items: center);
+
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.matches {
+  @include reset-list;
+
+  display: grid;
+  gap: 0.3rem;
+}
+
+.match {
+  padding-inline-start: 0.45rem;
+  border-inline-start: 2px solid var(--accent);
+  font-size: 0.82rem;
+
+  &[data-effect='shield'] {
+    border-color: #97cbdf;
+  }
+
+  &[data-effect='heal'] {
+    border-color: #a9dba2;
+  }
+
+  &[data-effect='magic'],
+  &[data-effect='curse'],
+  &[data-effect='focus'] {
+    border-color: #cca9e6;
+  }
+}
+
+.hit {
+  @include absolute-filled;
+
+  background: radial-gradient(ellipse, transparent 42%, #c345316b);
+  animation: hit 310ms ease-out both;
+  pointer-events: none;
+}
+
+@keyframes hit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
@@ -206,7 +304,6 @@
 }
 
 .actions .attack {
-  flex: 1 0 100%;
   min-block-size: rem(48px);
 }
 
@@ -228,6 +325,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hit {
+    display: none;
+  }
+
   .figure {
     animation: none;
   }
