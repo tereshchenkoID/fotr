@@ -1,12 +1,11 @@
 .block {
-  @include panel;
-
   display: grid;
   max-inline-size: 52rem;
   gap: 1.35rem;
   margin-inline: auto;
   padding: clamp(1rem, 4vw, 2.55rem);
-  background: radial-gradient(ellipse at 50% 25%, #253936, #141a21 78%);
+  border: 1px solid #bca68055;
+  border-radius: 0.95rem;
 }
 
 .heading {
@@ -25,7 +24,7 @@
   }
 
   .icon {
-    color: var(--gold);
+    color: var(--accent);
   }
 }
 
@@ -39,4 +38,12 @@
   .description {
     color: var(--muted);
   }
+}
+
+.result[data-result='win'] {
+  color: var(--accent);
+}
+
+.result[data-result='loss'] {
+  color: #ffbca7;
 }

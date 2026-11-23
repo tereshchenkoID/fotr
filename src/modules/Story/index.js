@@ -3,7 +3,6 @@ import { useLocale, useTranslations } from 'next-intl'
 import {
   Backpack,
   BookOpen,
-  ChevronLeft,
   Coins,
   Dices,
   Flag,
@@ -71,10 +70,6 @@ const Story = ({ hero, progress, node, command }) => {
           alt=""
         />
         <div className={style.bannerText}>
-          <Action href="/play/world" variant="secondary">
-            <ChevronLeft size={16} aria-hidden />
-            {t('nav.world')}
-          </Action>
           <p className={style.chapter}>
             {t(`campaigns.${hero.campaignId}.name`)} ·{' '}
             {t('story.chapter', { chapter: node.chapter + 1 })}

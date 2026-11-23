@@ -197,6 +197,22 @@ describe('Persisted sessions', () => {
     expect(await createIndexedStorage(factory).load()).toEqual(save)
   })
 
+  it('rejects repeated roll and hit commands with a stale turn after persistence', async () => {
+    const storage = createIndexedStorage(new IDBFactory())
+    const dice = await storage.update(() => choose(encounter(start('frodo')), 'dice'))
+    const rollCommand = command(dice, 'play', { action: 'roll', turn: 3 })
+    await storage.update(current => applyCommand(current, rollCommand, () => 0.5))
+    await storage.update(current => applyCommand(current, rollCommand, () => 0.25))
+    expect(active(await storage.load()).event.rolls).toBe(2)
+
+    const cards = await storage.replace(step(choose(encounter(start('sauron')), 'blackjack'), 'play', { action: 'deal' }, () => 0))
+    if (active(cards).event.result) throw new Error('Expected an active hand')
+    const hitCommand = command(cards, 'play', { action: 'hit', turn: 8 })
+    await storage.update(current => applyCommand(current, hitCommand))
+    await storage.update(current => applyCommand(current, hitCommand))
+    expect(active(await storage.load()).event.player).toHaveLength(3)
+  })
+
   it('serializes duplicate reward claims from different database connections', async () => {
     const factory = new IDBFactory()
     const first = createIndexedStorage(factory)

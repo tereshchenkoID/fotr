@@ -1,27 +1,29 @@
+import { useLayoutEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Layers, Orbit } from 'lucide-react'
 
 import { useTurnAnimation } from '@/hooks/useTurnAnimation'
+import { trialTurn } from '@/game/core/session'
 import { handValue, natural } from '@/game/minigames/blackjack'
 
 import Action from '@/components/Action'
 
+import TrialOutcome from '../TrialOutcome'
+
+import { cardArrival, cardArrivalDelay, getDealDuration } from './motion'
+
 import style from './index.module.scss'
 
-const cardDelay = 115
-const cardArrival = 390
-const dealDuration = () => cardDelay * 3 + cardArrival + 40
-
-const PlayingCard = ({ card, hidden, order, dealing }) => {
+const PlayingCard = ({ card, hidden, delay }) => {
   const t = useTranslations('trials')
   return (
     <span
       className={style.card}
-      data-dealing={dealing}
+      data-dealing={delay !== null}
       style={
-        dealing
+        delay !== null
           ? {
-              '--deal-delay': `${order * cardDelay}ms`,
+              '--deal-delay': `${delay}ms`,
               '--deal-time': `${cardArrival}ms`,
             }
           : undefined
@@ -29,7 +31,8 @@ const PlayingCard = ({ card, hidden, order, dealing }) => {
       role="img"
       aria-label={hidden ? t('hidden') : `${card.rank} ${card.suit}`}
     >
-      <span aria-hidden className={style.cardInner} data-covered={hidden}>
+      <span className={style.flight} data-flight={delay !== null} aria-hidden>
+      <span className={style.cardInner} data-covered={hidden}>
         <span className={style.back}>
           <Orbit className={style.mark} size={26} strokeWidth={1.3} />
         </span>
@@ -50,70 +53,77 @@ const PlayingCard = ({ card, hidden, order, dealing }) => {
           </span>
         )}
       </span>
+      </span>
     </span>
   )
 }
 
-const Hand = ({ cards, dealer, covered, dealing }) => {
+const Hand = ({ event, before, dealer, table }) => {
   const t = useTranslations('trials')
-  const count = covered ? handValue(cards.slice(0, 1)) : handValue(cards)
-  const showScore = cards.length > 0 && !dealing
+  const key = dealer ? 'dealer' : 'player'
+  const cards = event[key]
+  const shown = before || event
+  const covered = dealer && (!event.result || (before && !before.player.length))
+  const visible = dealer && !shown.result ? shown[key].slice(0, 1) : shown[key]
+  const total = handValue(visible)
+  const tone = natural(visible) ? 'natural' : total > 21 ? 'bust' : undefined
 
   return (
-    <section className={style.hand} data-dealer={dealer}>
+    <section className={style.hand} data-dealer={dealer} data-tone={tone}>
       <h2 className={style.handTitle}>
-        {t(dealer ? 'dealer' : 'player')}
-        {showScore && (
+        {t(dealer ? `dealers.${table}` : 'player')}
+        {shown[key].length > 0 && (
           <span className={style.score} aria-live="polite">
-            {!covered && natural(cards) ? t('natural') : count}
+            {tone ? t(tone) : total}
           </span>
         )}
       </h2>
       <div className={style.cards}>
         {cards.map((card, index) => (
-          <PlayingCard
-            key={index}
-            card={card}
-            hidden={covered && index === 1}
-            order={index * 2 + Number(dealer)}
-            dealing={dealing}
-          />
+          <PlayingCard key={index} card={card} hidden={covered && index === 1}
+            delay={cardArrivalDelay(before, event, dealer, index)} />
         ))}
         {cards.length === 0 && (
-          <>
-            <span className={style.empty} aria-hidden />
-            <span className={style.empty} aria-hidden />
-          </>
+          <><span className={style.empty} aria-hidden /><span className={style.empty} aria-hidden /></>
         )}
       </div>
     </section>
   )
 }
 
-const Blackjack = ({ event, play, busy, result }) => {
+const Blackjack = ({ event, play, busy, result, visuals }) => {
   const t = useTranslations('trials')
   const started = event.player.length > 0
-  const dealing = !!useTurnAnimation(event, Number(started), dealDuration)
+  const before = useTurnAnimation(event, trialTurn('blackjack', event), getDealDuration, true)
+  const dealing = !!before
+  const outcome = dealing ? null : event.result
   const locked = busy || dealing
+  const deck = useRef(null)
+  const table = useRef(null)
+
+  useLayoutEffect(() => {
+    if (!dealing) return
+    const origin = deck.current.getBoundingClientRect()
+    for (const flight of table.current.querySelectorAll('[data-flight="true"]')) {
+      const target = flight.parentElement.getBoundingClientRect()
+      flight.style.setProperty('--flight-x', `${origin.left + origin.width / 2 - target.left - target.width / 2}px`)
+      flight.style.setProperty('--flight-y', `${origin.top + origin.height / 2 - target.top - target.height / 2}px`)
+    }
+  }, [dealing])
+
   return (
     <>
-      <div className={style.block} aria-busy={dealing}>
-        <Hand
-          cards={event.dealer}
-          dealer
-          covered={!event.result || dealing}
-          dealing={dealing}
-        />
+      <div ref={table} className={style.block} aria-busy={dealing} data-card-back={visuals.theme.material}>
+        <Hand event={event} before={before} dealer table={visuals.table} />
         <div className={style.divider} aria-hidden>
-          <span className={style.deck}>
-            <Orbit size={22} strokeWidth={1.35} />
-          </span>
+          <span className={style.deck} ref={deck}><Orbit size={22} strokeWidth={1.35} /></span>
         </div>
-        <Hand cards={event.player} dealing={dealing} />
+        <Hand event={event} before={before} table={visuals.table} />
+        <TrialOutcome outcome={outcome} />
       </div>
-      {dealing || !event.result ? (
+      {!outcome ? (
         <div className={style.actions}>
-          {!started || dealing ? (
+          {!started || (before && !before.player.length) ? (
             <Action disabled={locked} onClick={() => play('deal')}>
               <Layers size={17} aria-hidden />
               {t('deal')}

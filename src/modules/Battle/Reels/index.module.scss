@@ -1,7 +1,6 @@
 .block {
   display: grid;
   grid-template-columns: repeat(5, minmax(0.1rem, 1fr));
-  gap: clamp(0.15rem, 0.9vw, 0.45rem);
   position: relative;
   border: 1px solid var(--theme-frame);
   border-radius: var(--radius);
@@ -10,19 +9,29 @@
 }
 
 .reel {
-  --row-gap: 0.22rem;
-
   position: relative;
+  aspect-ratio: 0.405;
+  border-inline-end: 1px solid var(--theme-frame);
   overflow: hidden;
 
-  &[data-fixed='true'] {
-    box-shadow: inset 0 0 0 1px var(--accent);
+  &[data-fixed='true'] .cell {
+    box-shadow: inset 0 0 0 1px var(--theme-frame);
+  }
+
+  &[data-affected='shift'] .cell {
+    background-color: #442e5a;
+  }
+
+  &[data-affected='burn'] .cell {
+    box-shadow: inset 0 -0.3rem 0.6rem #f86b302c;
   }
 }
 
 .reelFaces {
+  @include absolute-filled;
+
   display: grid;
-  gap: var(--row-gap);
+  grid-template-rows: repeat(3, 1fr);
 }
 
 .reel:has(.strip) .reelFaces {
@@ -30,39 +39,51 @@
 }
 
 .strip {
-  --row-step: calc((100% + var(--row-gap)) / 3);
+  --row-step: calc(100% / 3);
 
   @include absolute-filled;
 
   display: grid;
-  grid-auto-rows: calc((100% - var(--row-gap) * 2) / 3);
-  gap: var(--row-gap);
-  background: #090c0e;
+  grid-auto-rows: calc(100% / 3);
+  contain: size layout;
   pointer-events: none;
   animation: reel-roll var(--spin-time) cubic-bezier(0.24, 0.2, 0.32, 1) both;
 }
 
 .cell {
   display: grid;
-  aspect-ratio: 1.17;
-  place-items: center;
-  border: 1px solid #8c785539;
-  background: radial-gradient(ellipse at 50% 40%, #3e3a31, #181b20 78%);
+  background:
+    radial-gradient(ellipse at 50% 38%, #ffffff15, #070a1170 81%),
+    var(--theme-pattern);
+  background-color: var(--theme-surface);
+  overflow: hidden;
   color: #ddd2b9;
+  place-items: center;
+  border-block-end: 1px solid #b4987044;
 
   .symbol {
-    inline-size: 49%;
-    block-size: auto;
+    inline-size: 81%;
+    block-size: 81%;
+    object-fit: contain;
+    filter: drop-shadow(0 0.22rem 0.28rem #060709);
   }
 
-  &[data-special='true'] {
-    color: var(--gold-bright);
+  &[data-rarity='signature'] .symbol {
+    filter: drop-shadow(0 0 0.42rem var(--theme-glow));
+  }
+
+  &[data-rarity='rare'] .symbol {
+    filter: drop-shadow(0 0 0.24rem var(--theme-frame));
   }
 
   &[data-winner='true'] {
     border-color: var(--accent);
     box-shadow: inset 0 0 0.8rem #efbc6444;
     color: var(--accent);
+
+    .symbol {
+      animation: symbol-hit 380ms cubic-bezier(0.18, 0.8, 0.35, 1.15) both;
+    }
   }
 }
 
@@ -127,18 +148,41 @@
 @keyframes reel-roll {
   0% {
     transform: translateY(calc(-1 * var(--row-step) * var(--travel-rows)));
+    animation-timing-function: cubic-bezier(0.43, 0, 0.75, 0.57);
   }
 
-  82% {
-    transform: translateY(calc(-1.2 * var(--row-step)));
+  50% {
+    transform: translateY(
+      calc(-1 * var(--row-step) * var(--travel-rows) * 0.42)
+    );
+    animation-timing-function: cubic-bezier(0.27, 0.64, 0.55, 1);
   }
 
-  94% {
-    transform: translateY(calc(-0.94 * var(--row-step)));
+  87% {
+    transform: translateY(
+      calc(var(--row-step) * (-1 * var(--landing-row) + 0.075))
+    );
+  }
+
+  95% {
+    transform: translateY(
+      calc(var(--row-step) * (-1 * var(--landing-row) - 0.025))
+    );
   }
 
   100% {
-    transform: translateY(calc(-1 * var(--row-step)));
+    transform: translateY(calc(-1 * var(--row-step) * var(--landing-row)));
+  }
+}
+
+@keyframes symbol-hit {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.15);
   }
 }
 
@@ -161,7 +205,41 @@
     opacity: 1;
   }
 
-  .lines .line {
+  .lines .line,
+  .cell[data-winner='true'] .symbol {
     animation: none;
   }
+}
+
+.frame {
+  position: relative;
+  padding: clamp(0.18rem, 0.75vw, 0.58rem);
+  border: var(--theme-bevel);
+  border-radius: var(--theme-corner);
+  background:
+    var(--theme-pattern),
+    linear-gradient(140deg, var(--theme-shine), var(--theme-surface));
+  box-shadow:
+    inset 0 0 0 1px #ffeedb42,
+    0 0.35rem 1.15rem #04070acf;
+
+  &[data-frame='stone'] {
+    padding: clamp(0.24rem, 0.9vw, 0.68rem);
+  }
+
+  &[data-frame='obsidian'] {
+    clip-path: polygon(
+      0.55rem 0,
+      100% 0,
+      100% calc(100% - 0.55rem),
+      calc(100% - 0.55rem) 100%,
+      0 100%,
+      0 0.55rem
+    );
+  }
+}
+
+.cost {
+  font-size: 0.75rem;
+  color: var(--accent);
 }

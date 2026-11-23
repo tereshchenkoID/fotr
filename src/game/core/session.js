@@ -55,10 +55,15 @@ const launch = (hero, progress, node, random) => {
   return null
 }
 
+export const trialTurn = (type, event) => type === 'blackjack'
+  ? (event.player.length + event.dealer.length) * 2 + Number(!!event.result)
+  : event.rolls
+
 const playEvent = (save, hero, progress, node, command, random) => {
   const event = node.side ? progress.side.game : progress.event
   if (!event) return
   if (node.type === 'battle' && command.turn !== event.turn) return
+  if (node.type !== 'battle' && command.turn !== undefined && command.turn !== trialTurn(node.type, event)) return
   const { action, index } = command
   let next = event
   if (node.type === 'battle')

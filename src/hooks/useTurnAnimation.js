@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
-export const useTurnAnimation = (snapshot, turn, getDuration) => {
+export const shouldAnimateTurn = (previous, current, allowJump, reduced) =>
+  !reduced && (allowJump ? current > previous : current === previous + 1)
+
+export const useTurnAnimation = (snapshot, turn, getDuration, allowJump = false) => {
   const [frame, setFrame] = useState({ snapshot, turn, animation: null })
 
   // Record the last committed state so holds and boss effects apply to the
@@ -8,12 +11,11 @@ export const useTurnAnimation = (snapshot, turn, getDuration) => {
   if (frame.snapshot !== snapshot || frame.turn !== turn) {
     let animation = frame.animation
     if (frame.turn !== turn) {
-      const duration = turn === frame.turn + 1 ? getDuration(frame.snapshot) : 0
-      animation =
-        duration &&
-        !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? { before: frame.snapshot, duration }
-          : null
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const duration = shouldAnimateTurn(frame.turn, turn, allowJump, reduced)
+        ? getDuration(frame.snapshot, snapshot)
+        : 0
+      animation = duration ? { before: frame.snapshot, duration } : null
     }
     setFrame({ snapshot, turn, animation })
   }

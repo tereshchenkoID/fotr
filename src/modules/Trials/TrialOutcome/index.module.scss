@@ -1,0 +1,65 @@
+.block {
+  @include absolute-filled;
+
+  display: grid;
+  border-radius: inherit;
+  z-index: 1;
+  place-items: center;
+  pointer-events: none;
+
+  &[data-outcome] {
+    background: linear-gradient(90deg, #090c1240, #090c128c, #090c1240);
+  }
+
+  &[data-outcome='win'] {
+    --outcome-color: #f8de9d;
+    --outcome-surface: #211a0f;
+  }
+
+  &[data-outcome='loss'] {
+    --outcome-color: #ffc6b4;
+    --outcome-surface: #291619;
+  }
+
+  &[data-outcome='draw'] {
+    --outcome-color: #d3e3e7;
+    --outcome-surface: #1b252c;
+  }
+
+  &[data-entering='true'] .label {
+    animation: outcome-in 330ms ease-out both;
+  }
+}
+
+.label {
+  @include flex($align-items: center);
+
+  gap: 0.45rem;
+  padding: 0.4em 1em;
+  border: 1px solid var(--outcome-color);
+  border-radius: var(--radius);
+  background: var(--outcome-surface);
+  box-shadow: 0 0.3rem 1rem #06090aba;
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 3vw, 1.65rem);
+  font-weight: 800;
+  color: var(--outcome-color);
+}
+
+@keyframes outcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block[data-entering='true'] .label {
+    animation: none;
+  }
+}

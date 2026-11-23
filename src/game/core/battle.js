@@ -2,6 +2,7 @@ import { enemies, items } from '../content/items.js'
 import {
   findCombinations,
   generateGrid,
+  isReelFixed,
   spinEffects,
 } from '../minigames/slots.js'
 
@@ -71,6 +72,7 @@ const applyEffects = (
   const next = damageEnemy(battle, Math.min(damage, damageLimit))
   return {
     ...next,
+    criticalHit: !!bonus,
     hp: Math.min(stats.hp, battle.hp + (effects.heal || 0)),
     shield: Math.min(40, battle.shield + (effects.shield || 0)),
     focus: Math.min(10, battle.focus + (effects.focus || 0)),
@@ -80,6 +82,28 @@ const applyEffects = (
     },
   }
 }
+
+const withFeedback = (before, after, action, effects = {}) => {
+  const { criticalHit, ...battle } = after
+  return {
+    ...battle,
+    feedback: {
+      revision: (before.feedback?.revision ?? 0) + 1,
+      action,
+      critical: !!criticalHit,
+      attack: before.enemyHp - after.enemyHp,
+      damage: effects.damage ?? 0,
+      blocked: effects.blocked ?? 0,
+      healing: effects.healing ?? Math.max(0, after.hp - before.hp),
+      focus: Math.max(0, after.focus - before.focus),
+      shield: effects.shield ?? Math.max(0, after.shield - before.shield),
+      phaseChanged: after.phase > before.phase && after.enemyHp > 0,
+    },
+  }
+}
+
+export const convertTarget = ({ grid, held, statuses }) =>
+  grid.findIndex((_, index) => !isReelFixed(index, held, statuses) && !(statuses.shift > 0 && index === 4))
 
 const tick = (battle, hero, stats, random, quick = false) => {
   const grid = generateGrid(
@@ -147,13 +171,18 @@ const tick = (battle, hero, stats, random, quick = false) => {
       ) + burn
   const damage = Math.max(0, incoming - next.shield)
   const hp = Math.max(0, next.hp - damage)
-  return {
+  return withFeedback(battle, {
     ...next,
     hp,
     shield: Math.max(0, next.shield - incoming),
     result: hp ? next.result : 'loss',
     log: { attack: battle.enemyHp - next.enemyHp, damage },
-  }
+  }, quick ? 'reroll' : 'attack', {
+    damage,
+    blocked: Math.min(next.shield, incoming),
+    healing: Math.max(0, next.hp - battle.hp),
+    shield: Math.max(0, next.shield - battle.shield),
+  })
 }
 
 export const playBattle = (
@@ -171,11 +200,11 @@ export const playBattle = (
   const ability = hero.abilities[0]
   if (action === 'spin') return tick(battle, hero, stats, random)
   if (action === 'guard' && battle.focus >= 2 && battle.shield < 40) {
-    return {
+    return withFeedback(battle, {
       ...battle,
       focus: battle.focus - 2,
       shield: Math.min(40, battle.shield + 12),
-    }
+    }, 'guard')
   }
   if (
     action === 'ability' &&
@@ -192,10 +221,10 @@ export const playBattle = (
       stats,
       random
     )
-    return {
+    return withFeedback(battle, {
       ...next,
       log: { attack: battle.enemyHp - next.enemyHp, damage: 0 },
-    }
+    }, 'ability')
   }
   if (
     action === 'hold' &&
@@ -210,7 +239,7 @@ export const playBattle = (
         focus: Math.min(10, battle.focus + 2),
       }
     }
-    if (battle.focus >= 2 && battle.held.length < 2) {
+    if (!isReelFixed(column, battle.held, battle.statuses) && battle.focus >= 2 && battle.held.length < 2) {
       return {
         ...battle,
         held: [...battle.held, column],
@@ -219,19 +248,18 @@ export const playBattle = (
     }
   }
   if (action === 'convert' && battle.focus >= 3 && battle.held.length < 2) {
-    const target = battle.grid.findIndex(
-      (_, index) => !battle.held.includes(index)
-    )
+    const target = convertTarget(battle)
+    if (target < 0) return battle
     const grid = battle.grid.map((reel, index) =>
       index === target ? [reel[0], hero.slotConfig.pool[1].id, reel[2]] : reel
     )
-    return {
+    return withFeedback(battle, {
       ...battle,
       grid,
       held: [...battle.held, target],
       focus: battle.focus - 3,
       matches: [],
-    }
+    }, 'convert')
   }
   if (action === 'reroll' && battle.focus >= 3)
     return tick(

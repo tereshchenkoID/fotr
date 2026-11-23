@@ -1,6 +1,6 @@
 .block {
   --card-size: clamp(2.5rem, 12vw, 4.75rem);
-  --felt-line: #d0a66745;
+  --felt-line: color-mix(in srgb, var(--theme-frame) 56%, transparent);
 
   display: grid;
   gap: 0.7rem;
@@ -24,11 +24,7 @@
     inset: 0.35rem;
     border: 1px solid var(--felt-line);
     border-radius: inherit;
-    background-image: repeating-linear-gradient(
-      135deg,
-      #dac89b08 0 1px,
-      transparent 1px 5px
-    );
+    background-image: var(--table-pattern);
     z-index: -1;
     content: '';
     pointer-events: none;
@@ -36,15 +32,9 @@
 }
 
 .hand {
-  --deal-direction: -1;
-
   display: grid;
   justify-items: center;
   gap: 0.48rem;
-
-  &[data-dealer='true'] {
-    --deal-direction: 1;
-  }
 
   .handTitle {
     @include flex($justify-content: center, $align-items: center);
@@ -61,7 +51,7 @@
   padding: 0.15rem 0.55rem;
   border: 1px solid var(--felt-line);
   border-radius: 1rem;
-  background: #0b1d17;
+  background: var(--table-edge);
   color: var(--text);
   font: 700 0.78rem var(--font-body);
   font-variant-numeric: tabular-nums;
@@ -71,7 +61,11 @@
   @include flex($justify-content: center, $wrap: wrap);
 
   max-inline-size: 100%;
-  gap: clamp(0.26rem, 1.3vw, 0.7rem);
+  gap: 0.22rem;
+
+  .card + .card {
+    margin-inline-start: clamp(-0.68rem, -0.9vw, -0.28rem);
+  }
 }
 
 .card,
@@ -90,12 +84,13 @@
 .card {
   perspective: 30rem;
 
-  &[data-dealing='true'] {
+  &[data-dealing='true'] .flight {
     animation: arrive var(--deal-time) cubic-bezier(0.18, 0.68, 0.29, 1)
       var(--deal-delay) both;
   }
 }
 
+.flight,
 .cardInner {
   display: block;
   position: relative;
@@ -156,8 +151,8 @@
 .back,
 .deck {
   background:
-    repeating-linear-gradient(45deg, #aa86512b 0 1px, transparent 1px 5px),
-    linear-gradient(145deg, #3d2832, #211a26);
+    var(--theme-pattern),
+    linear-gradient(145deg, var(--theme-shine), var(--theme-surface));
   color: var(--gold-bright);
 }
 
@@ -215,22 +210,46 @@
 @keyframes arrive {
   from {
     opacity: 0;
-    transform: translateY(calc(var(--deal-direction) * 52%)) rotate(-13deg)
-      scale(0.86);
+    transform: translate(var(--flight-x, 0), var(--flight-y, 0)) rotate(-15deg)
+      scale(0.5);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) rotate(0) scale(1);
+    transform: translate(0, 0) rotate(0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card[data-dealing='true'] {
+  .card[data-dealing='true'] .flight {
     animation: none;
   }
 
   .cardInner {
     transition: none;
   }
+}
+
+.hand[data-tone='natural'] .score {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hand[data-tone='bust'] .score {
+  border-color: #bc7558;
+  color: #ffbda6;
+}
+
+.block[data-card-back='silver'] .back::before {
+  border-radius: 42% 42% 12% 12%;
+}
+
+.block[data-card-back='obsidian'] .back::before {
+  border-radius: 0.14rem 0.55rem;
+  border-color: var(--theme-glow);
+}
+
+.block[data-card-back='stone'] .back::before {
+  border: 2px ridge var(--theme-frame);
+  border-radius: 0;
 }

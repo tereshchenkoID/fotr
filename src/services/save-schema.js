@@ -16,6 +16,15 @@ const validResult = (result) => [null, 'win', 'loss', 'draw'].includes(result)
 const validCard = (card) =>
   isObject(card) && ranks.includes(card.rank) && suits.includes(card.suit)
 
+const validFeedback = (feedback) =>
+  feedback === undefined || (
+    isObject(feedback) &&
+    integer(feedback.revision, 1) &&
+    ['attack', 'reroll', 'ability', 'guard', 'convert'].includes(feedback.action) &&
+    ['critical', 'phaseChanged'].every((key) => typeof feedback[key] === 'boolean') &&
+    ['attack', 'damage', 'blocked', 'healing', 'focus', 'shield'].every((key) => integer(feedback[key]))
+  )
+
 const validEvent = (event, type, hero) => {
   if (!['blackjack', 'dice', 'battle'].includes(type)) return event === null
   if (!isObject(event) || !validResult(event.result)) return false
@@ -68,6 +77,7 @@ const validEvent = (event, type, hero) => {
   }
   return (
     known(enemies, event.enemyId) &&
+    validFeedback(event.feedback) &&
     list(
       event.grid,
       (reel) =>

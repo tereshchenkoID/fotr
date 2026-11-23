@@ -1,4 +1,5 @@
 export const art = {
+  symbolFallback: '/art/symbols/relic.webp',
   map: '/art/map.webp',
   enemy: '/art/enemy.webp',
 }

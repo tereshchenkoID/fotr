@@ -1,0 +1,165 @@
+.block {
+  --scene-light: #647b8c;
+  --theme-pattern: repeating-linear-gradient(
+    135deg,
+    #ffffff12 0 1px,
+    transparent 1px 7px
+  );
+  --theme-bevel: 1px solid var(--theme-frame);
+  --theme-corner: 0.28rem;
+  --table-felt: #243c30;
+  --table-edge: #0d1b16;
+  --table-pattern: repeating-linear-gradient(
+    45deg,
+    #fff1c710 0 1px,
+    transparent 1px 5px
+  );
+
+  position: relative;
+  isolation: isolate;
+
+  &[data-light='warm'] {
+    --scene-light: #b97e46;
+  }
+
+  &[data-light='cool'] {
+    --scene-light: #519485;
+  }
+
+  &[data-campaign='lantern'] {
+    --scene-veil: #3020169e;
+  }
+
+  &[data-campaign='starlight'] {
+    --scene-veil: #241c3a75;
+  }
+
+  &[data-boss='true'] {
+    --scene-veil: #481c2873;
+  }
+
+  &[data-material='wood'] {
+    --theme-pattern: repeating-linear-gradient(
+      5deg,
+      #9d78393d 0 1px,
+      #17100630 1px 3px,
+      transparent 6px 10px
+    );
+    --theme-bevel: 3px double var(--theme-frame);
+    --theme-corner: 0.72rem;
+  }
+
+  &[data-material='obsidian'] {
+    --theme-pattern: repeating-conic-gradient(
+      from 16deg at 12% 91%,
+      #fb713919 0 3deg,
+      transparent 3deg 18deg
+    );
+    --theme-bevel: 3px ridge var(--theme-frame);
+    --theme-corner: 0.2rem 1rem;
+  }
+
+  &[data-material='silver'] {
+    --theme-pattern: repeating-radial-gradient(
+      ellipse at 50% -2%,
+      #ccf9d72e 0 1px,
+      transparent 2px 11px
+    );
+    --theme-bevel: 3px double var(--theme-frame);
+    --theme-corner: 1.1rem 1.1rem 0.42rem 0.42rem;
+  }
+
+  &[data-material='stone'] {
+    --theme-pattern:
+      repeating-linear-gradient(0deg, #fff0b829 0 1px, transparent 1px 13px),
+      repeating-linear-gradient(90deg, #05080970 0 1px, transparent 1px 21px);
+    --theme-bevel: 4px ridge var(--theme-frame);
+    --theme-corner: 0.12rem;
+  }
+
+  &[data-material='rune'] {
+    --theme-pattern: repeating-conic-gradient(
+      from 45deg,
+      #bc9bff2b 0 3deg,
+      transparent 3deg 45deg
+    );
+    --theme-bevel: 2px solid var(--theme-frame);
+    --theme-corner: 0.78rem 0.18rem;
+  }
+
+  &[data-material='leather'] {
+    --theme-pattern:
+      repeating-linear-gradient(135deg, #0003 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(45deg, #fff2 0 1px, transparent 1px 5px);
+    --theme-bevel: 2px dashed var(--theme-frame);
+    --theme-corner: 0.66rem;
+  }
+
+  &[data-table='tavern'] {
+    --table-felt: #553622;
+    --table-edge: #261812;
+    --table-pattern: repeating-linear-gradient(
+      1deg,
+      #e0a46421 0 1px,
+      #2816094f 1px 3px,
+      transparent 3px 14px
+    );
+  }
+
+  &[data-table='hall'] {
+    --table-felt: #3b3c3d;
+    --table-edge: #17191f;
+    --table-pattern:
+      repeating-linear-gradient(0deg, #b3aaa431 0 1px, transparent 1px 31px),
+      repeating-linear-gradient(90deg, #10121770 0 1px, transparent 1px 66px);
+  }
+
+  &[data-table='elven'] {
+    --table-felt: #355553;
+    --table-edge: #142329;
+    --table-pattern: repeating-radial-gradient(
+      ellipse at 50% -10%,
+      #c6f3e128 0 1px,
+      transparent 1px 19px
+    );
+  }
+
+  &[data-table='dark'] {
+    --table-felt: #442b38;
+    --table-edge: #1b111b;
+    --table-pattern: repeating-conic-gradient(
+      from 45deg at 50% 75%,
+      #fb655b22 0 2deg,
+      transparent 2deg 14deg
+    );
+  }
+}
+
+.scenery,
+.haze {
+  @include absolute-filled;
+
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.scenery {
+  overflow: hidden;
+  z-index: -1;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center 44%;
+}
+
+.haze {
+  background:
+    linear-gradient(0deg, #080e15f5 6%, #0b131985 57%, #09111996),
+    radial-gradient(
+      ellipse at 50% 25%,
+      color-mix(in srgb, var(--scene-light) 55%, transparent),
+      transparent 72%
+    ),
+    var(--scene-veil, #18243040);
+}

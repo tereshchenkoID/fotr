@@ -1,0 +1,254 @@
+.block {
+  @include absolute-filled;
+
+  --duration: 670ms;
+
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+
+  &[data-large='true'] {
+    --duration: 1900ms;
+  }
+
+  &[data-reaction='critical'] {
+    --duration: 870ms;
+
+    filter: brightness(1.6);
+    scale: 1.15;
+  }
+
+  &[data-reaction='damage'] .particle,
+  &[data-reaction='defeat'] .particle {
+    animation-direction: reverse;
+  }
+
+  &[data-reaction='defeat'] {
+    --duration: 1150ms;
+
+    filter: saturate(0.55);
+  }
+
+  &[data-reaction='phase'] {
+    --duration: 1200ms;
+    --theme-glow: #ff876c;
+  }
+
+  &[data-reaction='victory'] {
+    --duration: 1250ms;
+  }
+}
+
+.particle {
+  @include absolute-center;
+
+  --direction: calc((var(--particle) / var(--count)) * 360deg);
+  --delay: calc(var(--particle) * var(--duration) / 12);
+
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--theme-glow);
+  opacity: 0;
+  animation-delay: var(--delay);
+  animation-duration: var(--duration);
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.block[data-effect='arrows'] .particle,
+.block[data-effect='arrow-storm'] .particle {
+  inset-block-start: calc(29% + var(--particle) * 9%);
+  inset-inline-start: 7%;
+  inline-size: 29%;
+  block-size: 0.22rem;
+  clip-path: polygon(0 24%, 75% 24%, 75% 0, 100% 50%, 75% 100%, 75% 76%, 0 76%);
+  box-shadow: 0 0 0.6rem var(--accent);
+  animation-name: volley;
+}
+
+.block[data-effect='arrow-storm'] .particle {
+  inline-size: 36%;
+}
+
+.block[data-effect='veil'] .particle,
+.block[data-effect='ember'] .particle {
+  inset-block-start: 76%;
+  inset-inline-start: calc(15% + var(--particle) * 12%);
+  inline-size: 24%;
+  block-size: 47%;
+  border-radius: 67% 34% 61% 39%;
+  background: radial-gradient(ellipse, var(--theme-glow), transparent 70%);
+  animation-name: drift;
+}
+
+.block[data-effect='veil'] .particle {
+  background: radial-gradient(
+    ellipse,
+    #e6f4bc9c,
+    #253c32a0 46%,
+    transparent 71%
+  );
+}
+
+.block[data-effect='hammer'] .particle,
+.block[data-effect='blade'] .particle {
+  inline-size: 12%;
+  block-size: 70%;
+  border-radius: 100% 0;
+  background: linear-gradient(0deg, transparent, var(--accent), transparent);
+  animation-name: slash;
+}
+
+.block[data-effect='hammer'] .particle {
+  --direction: calc(135deg + var(--particle) * 48deg);
+}
+
+.block[data-effect='blade'] .particle {
+  --direction: calc(34deg + var(--particle) * 46deg);
+}
+
+.block[data-effect='runes'] .particle,
+.block[data-effect='dark-ring'] .particle,
+.block[data-effect='shield'] .particle {
+  inline-size: 34%;
+  block-size: 34%;
+  border: 2px solid var(--theme-glow);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    inset 0 0 1rem var(--theme-shine),
+    0 0 1rem var(--theme-glow);
+  animation-name: ring;
+}
+
+.block[data-effect='runes'] .particle {
+  border-style: dashed;
+  border-radius: 11%;
+}
+
+.block[data-effect='shield'] .particle {
+  background: color-mix(in srgb, var(--theme-shine) 45%, transparent);
+  clip-path: polygon(50% 0, 95% 16%, 80% 74%, 50% 100%, 20% 74%, 5% 16%);
+}
+
+.block[data-effect='stars'] .particle,
+.block[data-effect='leaves'] .particle,
+.block[data-effect='stone'] .particle {
+  inline-size: 11%;
+  block-size: 18%;
+  clip-path: polygon(
+    50% 0,
+    64% 38%,
+    100% 50%,
+    64% 62%,
+    50% 100%,
+    36% 62%,
+    0 50%,
+    36% 38%
+  );
+  animation-name: scatter;
+}
+
+.block[data-effect='leaves'] .particle {
+  border-radius: 90% 0;
+  clip-path: none;
+}
+
+.block[data-effect='stone'] .particle {
+  clip-path: polygon(30% 0, 87% 13%, 100% 64%, 48% 100%, 0 68%);
+}
+
+@keyframes volley {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10%) rotate(-18deg);
+  }
+
+  31% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(315%, -48%) rotate(-18deg);
+  }
+}
+
+@keyframes drift {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8%) scale(0.24);
+  }
+
+  32% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -143%) scale(1.3);
+  }
+}
+
+@keyframes slash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--direction)) scaleY(0.2);
+  }
+
+  37% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--direction)) translateY(-33%)
+      scaleY(1.22);
+  }
+}
+
+@keyframes ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--direction)) scale(0.2);
+  }
+
+  40% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--direction) + 80deg))
+      scale(2.5);
+  }
+}
+
+@keyframes scatter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--direction)) scale(0.15);
+  }
+
+  33% {
+    opacity: 0.88;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--direction)) translateY(-245%)
+      scale(0.6);
+  }
+}
+
+@media (width < 35rem) {
+  .particle:nth-child(n + 5) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    display: none;
+  }
+}
