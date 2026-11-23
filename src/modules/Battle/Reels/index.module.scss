@@ -10,7 +10,7 @@
 
 .reel {
   position: relative;
-  aspect-ratio: 0.405;
+  aspect-ratio: 0.52;
   border-inline-end: 1px solid var(--theme-frame);
   overflow: hidden;
 
@@ -31,7 +31,7 @@
   @include absolute-filled;
 
   display: grid;
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 
 .reel:has(.strip) .reelFaces {
@@ -51,19 +51,18 @@
 }
 
 .cell {
-  display: grid;
-  background:
-    radial-gradient(ellipse at 50% 38%, #ffffff15, #070a1170 81%),
-    var(--theme-pattern);
+  position: relative;
+  background: radial-gradient(ellipse at 50% 38%, #ffffff10, #070a1170 81%);
   background-color: var(--theme-surface);
   overflow: hidden;
   color: #ddd2b9;
-  place-items: center;
   border-block-end: 1px solid #b4987044;
 
   .symbol {
-    inline-size: 81%;
-    block-size: 81%;
+    position: absolute;
+    inset: 10%;
+    inline-size: 80%;
+    block-size: 80%;
     object-fit: contain;
     filter: drop-shadow(0 0.22rem 0.28rem #060709);
   }
@@ -123,6 +122,10 @@
     color: var(--text);
     min-block-size: rem(43.2px);
     overflow-wrap: anywhere;
+
+    svg {
+      flex: none;
+    }
 
     &:disabled {
       opacity: 0.55;
@@ -266,10 +269,6 @@
       animation-delay: 0ms;
     }
   }
-}
-
-.cell {
-  position: relative;
 }
 
 @keyframes focus-line {

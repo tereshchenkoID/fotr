@@ -25,10 +25,8 @@ export const heroScene = (hero, visuals) => {
   }
 }
 
-export const victoryScene = (enemy, boss) =>
-  boss
-    ? bossScenes[enemy] || { style: 'iron', effect: 'stars' }
-    : { style: 'fall' }
+export const victoryScene = (enemy) =>
+  bossScenes[enemy] || { style: 'iron', effect: 'stars' }
 
 export const jackpotLine = (battle, jackpot) =>
   battle.cinematic &&
@@ -57,10 +55,10 @@ export const battleSequence = (previous, result, boss, reduced, compact) => {
   steps.push({ stage: 'recovery', duration: result.cinematic ? 360 : 150 })
   if (result.feedback?.phaseChanged)
     steps.push({ stage: 'phase', duration: 460 })
-  if (result.result === 'win')
+  if (result.result === 'win' && boss)
     steps.push({
       stage: 'victory',
-      duration: boss ? (compact ? 980 : 1350) : 420,
+      duration: compact ? 980 : 1350,
     })
   return steps
 }

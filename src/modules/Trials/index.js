@@ -33,11 +33,18 @@ const Trials = ({ hero, progress, node, command }) => {
   )
 
   return (
-    <VisualScene className={style.block} visuals={visuals}>
+    <VisualScene
+      className={cards ? style.block : `${style.block} ${style.duel}`}
+      visuals={visuals}
+      scenery={cards}
+    >
       <header className={style.heading}>
-        <Icon className={style.icon} size={30} strokeWidth={1.4} aria-hidden />
+        {cards && <Icon className={style.icon} size={30} strokeWidth={1.4} aria-hidden />}
         {node.side && <p className={style.description}>{t('story.side')}</p>}
-        <h1 className={style.title}>{t(`nav.${node.type}`)}</h1>
+        <h1 className={style.title}>
+          {!cards && <Icon className={style.icon} size={24} strokeWidth={1.5} aria-hidden />}
+          {t(`nav.${node.type}`)}
+        </h1>
         {!cards && <p className={style.description}>{t('rules.dice')}</p>}
         {node.side && <p className={style.description}>{t(`trials.camp.${hero.campaignId}`)}</p>}
       </header>

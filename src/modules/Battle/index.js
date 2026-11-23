@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import {
   Flame,
   HelpCircle,
+  Info,
   Lock,
   Shield,
   Skull,
@@ -83,7 +84,7 @@ const Combatant = ({
         src={portrait}
         alt=""
         fill
-        sizes="(max-width: 768px) 40vw, 230px"
+        sizes="(max-width: 719px) 45vw, 230px"
       />
       {effect && (
         <CombatEffect
@@ -140,8 +141,10 @@ const Combatant = ({
         </ul>
       )}
     </div>
-    <h2 className={style.combatantName}>{name}</h2>
-    {caption && <p className={style.combatantCaption}>{caption}</p>}
+    <div className={style.combatantIdentity}>
+      <h2 className={style.combatantName}>{name}</h2>
+      {caption && <p className={style.combatantCaption}>{caption}</p>}
+    </div>
     <Meter
       className={style.health}
       label={title}
@@ -151,6 +154,40 @@ const Combatant = ({
     />
   </div>
 )
+
+const BattlePopover = ({ className, toggleClassName, label, children, panel }) => {
+  const disclosure = useRef(null)
+
+  useEffect(() => {
+    const element = disclosure.current
+    const dismissOutside = (event) => {
+      if (element.open && !element.contains(event.target)) element.open = false
+    }
+    const dismissOnEscape = (event) => {
+      if (event.key !== 'Escape' || !element.open) return
+      if (element.contains(document.activeElement)) {
+        element.querySelector('summary').focus()
+      }
+      element.open = false
+    }
+
+    document.addEventListener('click', dismissOutside, true)
+    document.addEventListener('keydown', dismissOnEscape)
+    return () => {
+      document.removeEventListener('click', dismissOutside, true)
+      document.removeEventListener('keydown', dismissOnEscape)
+    }
+  }, [])
+
+  return (
+    <details className={className} ref={disclosure}>
+      <summary className={toggleClassName} aria-label={label}>
+        {children}
+      </summary>
+      {panel}
+    </details>
+  )
+}
 
 const Battle = ({ hero, progress, node, command }) => {
   const t = useTranslations()
@@ -165,6 +202,7 @@ const Battle = ({ hero, progress, node, command }) => {
   )
   const battle = withholding ? before : committed
   const readyForResult = !pending && !committed.cinematic
+  const finished = !!battle.result && readyForResult
   const victory = battle.result === 'win'
   const statuses = Object.entries(battle.statuses)
     .filter(([, value]) => value > 0)
@@ -242,7 +280,7 @@ const Battle = ({ hero, progress, node, command }) => {
 
   const showingVictory = stage === 'victory'
   const scene = showingVictory
-    ? victoryScene(battle.enemyId, node.boss)
+    ? victoryScene(battle.enemyId)
     : jackpotActive && ['cinematic', 'impact', 'recovery'].includes(stage)
       ? heroScene(hero, visuals.theme)
       : null
@@ -252,19 +290,35 @@ const Battle = ({ hero, progress, node, command }) => {
     stage === 'anticipation' ? jackpotLine(committed, hero.jackpot) : null
 
   return (
-    <VisualScene className={style.block} visuals={visuals}>
+    <VisualScene className={style.block} visuals={visuals} scenery={false}>
       <header className={style.heading}>
-        <h1 className={style.title}>
-          {locations[progress.location].names[locale]}
-        </h1>
-        <p className={style.encounter}>
-          {node.boss && `${t('battle.boss')} · `}
-          {enemyName}
-        </p>
-        <p className={style.caption}>
-          {t('battle.turn', { value: battle.turn })} ·{' '}
-          {t('battle.phase', { value: battle.phase + 1 })}
-        </p>
+        <div className={style.identity}>
+          <h1 className={style.title}>
+            {locations[progress.location].names[locale]}
+          </h1>
+          <p className={style.encounter}>
+            {node.boss && `${t('battle.boss')} · `}
+            {enemyName}
+          </p>
+        </div>
+        <div className={style.headingActions}>
+          <p className={style.caption}>
+            {t('battle.turn', { value: battle.turn })}
+          </p>
+          <BattlePopover
+            className={style.rules}
+            toggleClassName={style.infoToggle}
+            label={t('combatUi.rules')}
+            panel={
+              <div className={style.rulesPanel}>
+                <p>{t('rules.battle')}</p>
+                <p>{t('battle.rerollHelp')}</p>
+              </div>
+            }
+          >
+            <Info className={style.icon} size={17} aria-hidden />
+          </BattlePopover>
+        </div>
       </header>
       <div className={style.arena} data-stage={stage} data-boss={!!node.boss}>
         <div className={style.hero}>
@@ -313,13 +367,15 @@ const Battle = ({ hero, progress, node, command }) => {
             }
           />
         </div>
-        <div className={style.machine}>
-          <Meter
-            label={t('game.focus')}
-            value={battle.focus}
-            max={10}
-            kind="focus"
-          />
+        <div className={style.machine} data-finished={finished}>
+          {!finished && (
+            <Meter
+              label={t('game.focus')}
+              value={battle.focus}
+              max={10}
+              kind="focus"
+            />
+          )}
           <div className={style.reelStage}>
             <Reels
               hero={hero}
@@ -328,6 +384,7 @@ const Battle = ({ hero, progress, node, command }) => {
               before={spin ? before : null}
               play={play}
               locked={locked}
+              showHolds={!finished}
               spotlight={spotlight}
             />
             {scene && (
@@ -344,7 +401,7 @@ const Battle = ({ hero, progress, node, command }) => {
               />
             )}
           </div>
-          {battle.result && readyForResult ? (
+          {finished ? (
             <div className={style.result}>
               <div>
                 <h2 className={style.resultTitle}>
@@ -439,75 +496,79 @@ const Battle = ({ hero, progress, node, command }) => {
               </div>
             </div>
           )}
-          {!victory && !scene && (
+          {!finished && !victory && !scene && (
             <div className={style.details}>
-              {(battle.log ||
-                activeFeedback?.phaseChanged ||
-                (!withholding && changes.length > 0)) && (
-                <div className={style.log} aria-live="polite">
-                  {activeFeedback?.critical && (
-                    <strong className={style.notice}>
-                      {t('combatFeedback.critical')} ·{' '}
-                    </strong>
-                  )}
-                  {!withholding && activeFeedback?.phaseChanged && (
-                    <strong className={style.notice}>
-                      {t('combatFeedback.phase')} ·{' '}
-                    </strong>
-                  )}
-                  {battle.log && t('battle.log', battle.log)}
-                  {!withholding && changes.length > 0 && (
-                    <ul className={style.matches}>
-                      {changes.map(({ id, duration }) => (
-                        <li key={id}>
-                          {duration > 0
-                            ? t('combatFeedback.statusApplied', {
-                                status: t(`statuses.${id}`),
-                                duration,
-                              })
-                            : t('combatFeedback.statusEnded', {
-                                status: t(`statuses.${id}`),
+              <BattlePopover
+                className={style.help}
+                toggleClassName={style.helpToggle}
+                panel={
+                  <div className={style.report}>
+                    {!battle.log && <p className={style.log}>{t('combatUi.noReport')}</p>}
+                    {(battle.log ||
+                      activeFeedback?.phaseChanged ||
+                      (!withholding && changes.length > 0)) && (
+                      <div className={style.log}>
+                        {activeFeedback?.critical && (
+                          <strong className={style.notice}>
+                            {t('combatFeedback.critical')} ·{' '}
+                          </strong>
+                        )}
+                        {!withholding && activeFeedback?.phaseChanged && (
+                          <strong className={style.notice}>
+                            {t('combatFeedback.phase')} ·{' '}
+                          </strong>
+                        )}
+                        {battle.log && t('battle.log', battle.log)}
+                        {!withholding && changes.length > 0 && (
+                          <ul className={style.matches}>
+                            {changes.map(({ id, duration }) => (
+                              <li key={id}>
+                                {duration > 0
+                                  ? t('combatFeedback.statusApplied', {
+                                      status: t(`statuses.${id}`),
+                                      duration,
+                                    })
+                                  : t('combatFeedback.statusEnded', {
+                                      status: t(`statuses.${id}`),
+                                    })}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                    {!withholding && battle.matches.length > 0 && (
+                      <ul className={style.matches}>
+                        {battle.matches.map(({ line, symbol, count }) => {
+                          const effect = hero.slotConfig.pool.find(
+                            ({ id }) => id === symbol
+                          )?.effect
+                          if (!effect) return null
+                          return (
+                            <li
+                              className={style.match}
+                              key={line}
+                              data-effect={effect}
+                            >
+                              {t('combatUi.line', {
+                                line: line + 1,
+                                symbol: t(`symbols.${symbol}`),
+                                count,
+                                effect: t(
+                                  `combatUi.${effect === 'focus' ? 'focusEffect' : effect}`
+                                ),
                               })}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
-              {!withholding && battle.matches.length > 0 && (
-                <ul className={style.matches}>
-                  {battle.matches.map(({ line, symbol, count }) => {
-                    const effect = hero.slotConfig.pool.find(
-                      ({ id }) => id === symbol
-                    )?.effect
-                    if (!effect) return null
-                    return (
-                      <li
-                        className={style.match}
-                        key={line}
-                        data-effect={effect}
-                      >
-                        {t('combatUi.line', {
-                          line: line + 1,
-                          symbol: t(`symbols.${symbol}`),
-                          count,
-                          effect: t(
-                            `combatUi.${effect === 'focus' ? 'focusEffect' : effect}`
-                          ),
+                            </li>
+                          )
                         })}
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-              <details className={style.help}>
-                <summary className={style.helpToggle}>
-                  <HelpCircle size={15} aria-hidden />
-                  {t('combatUi.help')}
-                </summary>
-                <p className={style.log}>{t('rules.battle')}</p>
-                <p className={style.log}>{t('battle.rerollHelp')}</p>
-              </details>
+                      </ul>
+                    )}
+                  </div>
+                }
+              >
+                <HelpCircle className={style.icon} size={15} aria-hidden />
+                {t('combatUi.help')}
+              </BattlePopover>
               {progress.equipped.length > 0 && (
                 <p className={style.equipped}>
                   {t('game.equipped')}:{' '}

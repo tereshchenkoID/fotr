@@ -52,7 +52,7 @@ describe('Battle presentation', () => {
     }
   )
 
-  it('queues victory after impact for regular and jackpot finishes', () => {
+  it('plays boss victories and skips the portrait cutaway for ordinary victories', () => {
     const hero = heroes.thorin
     const progress = newProgress(hero)
     const before = {
@@ -72,6 +72,13 @@ describe('Battle presentation', () => {
       'recovery',
       'victory',
     ])
+    expect(stages(battleSequence(before, normal, false, false, false))).toEqual([
+      'spin',
+      'impact',
+      'recovery',
+    ])
+    expect(stages(battleSequence(before, jackpot, false, false, false))).toContain('cinematic')
+    expect(stages(battleSequence(before, jackpot, false, false, false))).not.toContain('victory')
     const desktop = battleSequence(before, jackpot, true, false, false)
     const mobile = battleSequence(before, jackpot, true, false, true)
     expect(stages(desktop)).toEqual([
@@ -84,10 +91,9 @@ describe('Battle presentation', () => {
     ])
     expect(stages(mobile)).toEqual(stages(desktop))
     expect(mobile.at(-1).duration).toBeLessThan(desktop.at(-1).duration)
-    expect(victoryScene('dragon', true).style).toBe('embers')
-    expect(victoryScene('balrog', true).style).toBe('fracture')
-    expect(victoryScene('azog', true).style).toBe('iron')
-    expect(victoryScene('scout', false).style).toBe('fall')
+    expect(victoryScene('dragon').style).toBe('embers')
+    expect(victoryScene('balrog').style).toBe('fracture')
+    expect(victoryScene('azog').style).toBe('iron')
     expect(statusChanges({ weaken: 1, lock: 2 }, { lock: 1, burn: 2 })).toEqual(
       [
         { id: 'weaken', duration: 0 },

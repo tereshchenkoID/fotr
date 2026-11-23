@@ -684,6 +684,8 @@
     "critical": "35% chance for {value} extra damage"
   },
   "combatUi": {
+    "rules": "Battle rules",
+    "noReport": "Attack to see the latest damage and winning lines.",
     "help": "Battle help",
     "combat": "Combat actions",
     "reel": "Reel actions",

@@ -63,7 +63,16 @@ const ReelStrip = ({ previous, result, pool, visuals, column, turn }) => {
   )
 }
 
-const Reels = ({ hero, visuals, result, before, play, locked, spotlight }) => {
+const Reels = ({
+  hero,
+  visuals,
+  result,
+  before,
+  play,
+  locked,
+  spotlight,
+  showHolds,
+}) => {
   const t = useTranslations()
   const pool = hero.slotConfig.pool
   for (const { image } of Object.values(visuals.symbols))
@@ -72,15 +81,20 @@ const Reels = ({ hero, visuals, result, before, play, locked, spotlight }) => {
   const matches = before ? [] : result.matches
   const focusCells = spotlight?.cells
   const focusOrigin = focusCells && {
-    '--focus-x': `${focusCells.reduce((sum, cell) => sum + Number(cell[0]) + 0.5, 0) * 20 / focusCells.length}%`,
-    '--focus-y': `${focusCells.reduce((sum, cell) => sum + Number(cell[2]) + 0.5, 0) * 100 / (3 * focusCells.length)}%`,
+    '--focus-x': `${(focusCells.reduce((sum, cell) => sum + Number(cell[0]) + 0.5, 0) * 20) / focusCells.length}%`,
+    '--focus-y': `${(focusCells.reduce((sum, cell) => sum + Number(cell[2]) + 0.5, 0) * 100) / (3 * focusCells.length)}%`,
   }
   const highlighted = new Set(matches.flatMap(({ cells }) => cells))
 
   return (
     <>
       <div className={style.frame} data-frame={visuals.frame}>
-        <div className={style.block} aria-busy={!!before} data-focus={!!spotlight} style={focusOrigin}>
+        <div
+          className={style.block}
+          aria-busy={!!before}
+          data-focus={!!spotlight}
+          style={focusOrigin}
+        >
           {result.grid.map((reel, column) => {
             const spinning = before && !isFixed(before, column)
             return (
@@ -132,7 +146,9 @@ const Reels = ({ hero, visuals, result, before, play, locked, spotlight }) => {
                 <polyline
                   className={style.line}
                   key={line}
-                  data-spotlight={spotlight ? spotlight.line === line : undefined}
+                  data-spotlight={
+                    spotlight ? spotlight.line === line : undefined
+                  }
                   pathLength={1}
                   style={{ '--line-delay': `${index * 95}ms` }}
                   points={cells
@@ -149,38 +165,47 @@ const Reels = ({ hero, visuals, result, before, play, locked, spotlight }) => {
           )}
         </div>
       </div>
-      <div className={style.holds}>
-        {shown.grid.map((_, column) => {
-          const held = shown.held.includes(column)
-          const fixed = !held && isFixed(shown, column)
-          const reason = fixed ? t('statuses.lock')
-            : locked ? t('combatUi.busy')
-              : !held && shown.focus < 2 ? t('combatUi.focus', { value: 2 })
-                : !held && shown.held.length === 2 ? t('combatUi.holdLimit') : null
-          return (
-            <button
-              className={style.hold}
-              key={column}
-              type="button"
-              aria-pressed={held}
-              aria-label={[t('battle.holdReel', { reel: column + 1 }), reason].filter(Boolean).join(' · ')}
-              title={reason || t('battle.holdCost')}
-              disabled={!!reason}
-              onClick={() => play('hold', column)}
-            >
-              {held || fixed ? (
-                <LockKeyhole size={16} aria-hidden />
-              ) : (
-                <LockKeyholeOpen size={16} aria-hidden />
-              )}
-              <span className={style.holdLabel}>
-                {t(`battle.${held || fixed ? 'held' : 'hold'}`)}
-              </span>
-              {!held && !fixed && <span className={style.cost}>2</span>}
-            </button>
-          )
-        })}
-      </div>
+      {showHolds && (
+        <div className={style.holds}>
+          {shown.grid.map((_, column) => {
+            const held = shown.held.includes(column)
+            const fixed = !held && isFixed(shown, column)
+            const reason = fixed
+              ? t('statuses.lock')
+              : locked
+                ? t('combatUi.busy')
+                : !held && shown.focus < 2
+                  ? t('combatUi.focus', { value: 2 })
+                  : !held && shown.held.length === 2
+                    ? t('combatUi.holdLimit')
+                    : null
+            return (
+              <button
+                className={style.hold}
+                key={column}
+                type="button"
+                aria-pressed={held}
+                aria-label={[t('battle.holdReel', { reel: column + 1 }), reason]
+                  .filter(Boolean)
+                  .join(' · ')}
+                title={reason || t('battle.holdCost')}
+                disabled={!!reason}
+                onClick={() => play('hold', column)}
+              >
+                {held || fixed ? (
+                  <LockKeyhole size={16} aria-hidden />
+                ) : (
+                  <LockKeyholeOpen size={16} aria-hidden />
+                )}
+                <span className={style.holdLabel}>
+                  {t(`battle.${held || fixed ? 'held' : 'hold'}`)}
+                </span>
+                {!held && !fixed && <span className={style.cost}>2</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </>
   )
 }

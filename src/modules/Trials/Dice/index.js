@@ -135,27 +135,29 @@ const Dice = ({ event, play, busy, material, opponent, heroName, result }) => {
               <small>{opponent.name}</small>
             </span>
           </div>
-          <p className={style.summary} aria-live="polite">
-            {rolling
-              ? t(playerThrow ? 'playerRolling' : 'opponentRolling')
-              : difference === null
-                ? t('awaiting')
-                : difference === 0
-                  ? t('roundTie')
-                  : t(difference > 0 ? 'roundWin' : 'roundLoss', {
-                      difference: Math.abs(difference),
-                    })}
-          </p>
-          {previous.length > 0 && (
-            <p className={style.leader}>
-              <Flag size={14} aria-hidden />
-              {lead === 0
-                ? t('tied')
-                : t(lead > 0 ? 'playerLeads' : 'opponentLeads', {
-                    difference: Math.abs(lead),
-                  })}
+          <div className={style.roundMeta}>
+            <p className={style.summary} aria-live="polite">
+              {rolling
+                ? t(playerThrow ? 'playerRolling' : 'opponentRolling')
+                : difference === null
+                  ? t('awaiting')
+                  : difference === 0
+                    ? t('roundTie')
+                    : t(difference > 0 ? 'roundWin' : 'roundLoss', {
+                        difference: Math.abs(difference),
+                      })}
             </p>
-          )}
+            {previous.length > 0 && (
+              <p className={style.leader}>
+                <Flag size={14} aria-hidden />
+                {lead === 0
+                  ? t('tied')
+                  : t(lead > 0 ? 'playerLeads' : 'opponentLeads', {
+                      difference: Math.abs(lead),
+                    })}
+              </p>
+            )}
+          </div>
         </div>
         <DiceHand
           name={heroName}
@@ -165,6 +167,19 @@ const Dice = ({ event, play, busy, material, opponent, heroName, result }) => {
         />
         <TrialOutcome outcome={outcome} />
       </div>
+      {outcome ? (
+        result
+      ) : (
+        <div className={style.actions}>
+          <Action
+            disabled={busy || rolling}
+            onClick={() => play(event.ready ? 'roll' : 'next')}
+          >
+            <Dices size={17} aria-hidden />
+            {t(event.ready || rolling ? 'roll' : 'next')}
+          </Action>
+        </div>
+      )}
       {previous.length > 0 && (
         <table className={style.history}>
           <caption className={style.historyTitle}>{t('history')}</caption>
@@ -185,19 +200,6 @@ const Dice = ({ event, play, busy, material, opponent, heroName, result }) => {
             ))}
           </tbody>
         </table>
-      )}
-      {outcome ? (
-        result
-      ) : (
-        <div className={style.actions}>
-          <Action
-            disabled={busy || rolling}
-            onClick={() => play(event.ready ? 'roll' : 'next')}
-          >
-            <Dices size={17} aria-hidden />
-            {t(event.ready || rolling ? 'roll' : 'next')}
-          </Action>
-        </div>
       )}
     </>
   )

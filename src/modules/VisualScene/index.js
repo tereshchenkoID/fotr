@@ -2,7 +2,7 @@ import Image from 'next/image'
 
 import style from './index.module.scss'
 
-const VisualScene = ({ visuals, className, children }) => {
+const VisualScene = ({ visuals, className, scenery = true, children }) => {
   const { palette, material } = visuals.theme
   const [accent, frame, surface, shine, glow] = palette
   return (
@@ -21,16 +21,18 @@ const VisualScene = ({ visuals, className, children }) => {
         '--theme-glow': glow,
       }}
     >
-      <div className={style.scenery} aria-hidden>
-        <Image
-          className={style.image}
-          src={visuals.image}
-          alt=""
-          fill
-          sizes="(max-width: 768px) 100vw, 1200px"
-        />
-        <div className={style.haze} />
-      </div>
+      {scenery && (
+        <div className={style.scenery} aria-hidden>
+          <Image
+            className={style.image}
+            src={visuals.image}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 1200px"
+          />
+          <div className={style.haze} />
+        </div>
+      )}
       {children}
     </article>
   )
