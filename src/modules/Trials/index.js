@@ -3,6 +3,7 @@ import { Dices, Layers } from 'lucide-react'
 
 import { useGame } from '@/store/game'
 import { enemyArt } from '@/game/content/assets'
+import { heroes } from '@/game/content/heroes'
 import { resolveTrialVisuals } from '@/game/content/visual-themes'
 import { trialTurn } from '@/game/core/session'
 
@@ -36,7 +37,7 @@ const Trials = ({ hero, progress, node, command }) => {
     <VisualScene
       className={cards ? style.block : `${style.block} ${style.duel}`}
       visuals={visuals}
-      scenery={cards}
+      scenery={false}
     >
       <header className={style.heading}>
         {cards && <Icon className={style.icon} size={30} strokeWidth={1.4} aria-hidden />}
@@ -46,10 +47,10 @@ const Trials = ({ hero, progress, node, command }) => {
           {t(`nav.${node.type}`)}
         </h1>
         {!cards && <p className={style.description}>{t('rules.dice')}</p>}
-        {node.side && <p className={style.description}>{t(`trials.camp.${hero.campaignId}`)}</p>}
+        {node.side && <p className={style.description}>{t(node.speaker ? 'chronicle.campDice' : `trials.camp.${hero.campaignId}`)}</p>}
       </header>
       {cards ? (
-        <Blackjack event={event} play={play} busy={busy} result={result} visuals={visuals} />
+        <Blackjack event={event} play={play} busy={busy} result={result} visuals={visuals} dealerName={node.dealer} />
       ) : (
         <Dice
           event={event}
@@ -59,7 +60,9 @@ const Trials = ({ hero, progress, node, command }) => {
           heroName={t(hero.nameKey)}
           opponent={node.enemy
             ? { name: t(`enemies.${node.enemy}`), portrait: enemyArt[node.enemy] }
-            : { name: t(`trials.dealers.${visuals.table}`) }}
+            : node.speaker
+              ? { name: t(heroes[node.speaker].nameKey), portrait: heroes[node.speaker].portrait }
+              : { name: t(`trials.dealers.${visuals.table}`) }}
           result={result}
         />
       )}

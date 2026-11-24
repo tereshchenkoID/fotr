@@ -103,23 +103,33 @@ describe('Story graph', () => {
         )
         save = encounter(save)
         const final = chapter === config.route.length - 1
-        if (node(save).boss) {
-          save = choose(save, 'battle')
-          for (let turn = 0; turn < 9 && !active(save).event.result; turn++) {
+        const choices = node(save).actions
+        const action = choices.find(({ id }) => id === 'dice') || choices[0]
+        save = choose(save, action.id)
+        expect(validateSave(save)).toEqual(save)
+        if (node(save).type === 'battle') {
+          for (let turns = 0; turns < 14 && !active(save).event.result; turns++) {
+            const { turn } = active(save).event
             save = step(save, 'play', { action: 'spin', turn }, () => 0)
             if (active(save).event.cinematic)
               save = step(save, 'play', { action: 'dismiss', turn: turn + 1 })
           }
           expect(active(save).event.result).toBe('win')
-        } else {
-          save = choose(save, 'dice')
-          expect(active(save).event).toMatchObject({ rounds: [], ready: true })
-          expect(validateSave(save)).toEqual(save)
+          save = step(save, 'advance')
+        } else if (node(save).type === 'dice') {
           save = winDuel(save)
           expect(active(save).event.result).toBe('win')
+          save = step(save, 'advance')
+        } else if (node(save).type === 'blackjack') {
+          save = step(save, 'play', { action: 'deal' })
+          save = step(save, 'play', { action: 'stand' })
+          expect(active(save).event.result).toBeTruthy()
+          save = step(save, 'advance')
         }
-        expect(validateSave(save)).toEqual(save)
-        save = step(save, 'advance')
+        while (node(save).type === 'dialogue') {
+          expect(validateSave(save)).toEqual(save)
+          save = step(save, 'advance')
+        }
         expect(node(save).type).toBe('reward')
         save = step(save, 'advance')
         if (final) {

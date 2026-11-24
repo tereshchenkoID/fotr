@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { heroes } from '../src/game/content/heroes.js'
 import {
   heroVisuals,
+  resolveLocationVisuals,
   resolveTrialVisuals,
   resolveVisuals,
   symbolFallback,
@@ -45,11 +46,23 @@ describe('Visual identity', () => {
         Object.values(theme.symbols).every(({ image }) => hasImage(image))
       ).toBe(true)
       expect(
-        hero.route.every((location) =>
-          hasImage(resolveVisuals(hero, location, {}).image)
-        )
+        hero.route.every((location) => {
+          const { image } = resolveVisuals(hero, location, {})
+          return image === null ? ['fangorn', 'doom'].includes(location) : hasImage(image)
+        })
       ).toBe(true)
     }
+  })
+
+  it('uses the actual Trollshaws and Rivendell scenery, with neutral fallbacks for missing places', () => {
+    const forest = resolveLocationVisuals('hobbit', 'trollshaws')
+    const valley = resolveLocationVisuals('hobbit', 'rivendell')
+    expect(forest.image).toBe('/art/locations/trollshaws.webp')
+    expect(valley.image).toBe('/art/locations/rivendell.webp')
+    expect(resolveLocationVisuals('hobbit', 'rivendell', { visual: 'moonLetters' }))
+      .toMatchObject({ image: valley.image, light: 'cold' })
+    expect(resolveLocationVisuals('war', 'fangorn').image).toBeNull()
+    expect(resolveLocationVisuals('war', 'doom').image).toBeNull()
   })
 
   it('keeps Sauron’s obsidian gear in Eregion and varies the atmosphere by campaign and event', () => {

@@ -71,3 +71,15 @@ export const campaigns = {
     ),
   },
 }
+
+const markerGroups = {
+  settlement: ['shire', 'bree', 'rivendell', 'rohan', 'minas', 'lake', 'numenor', 'lindon', 'southlands'],
+  fortress: ['weathertop', 'helm', 'gate', 'erebor', 'eregion', 'khazad'],
+  forest: ['lorien', 'fangorn', 'ithilien', 'trollshaws', 'mirkwood'],
+  cave: ['moria', 'cirith', 'goblins', 'cave'],
+  landmark: ['amon', 'marshes', 'mordor', 'doom', 'five', 'rhun'],
+}
+
+export const locationMarkers = Object.fromEntries(
+  Object.entries(markerGroups).flatMap(([type, ids]) => ids.map((id) => [id, type]))
+)

@@ -1,28 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import {
   Backpack,
   BookOpen,
+  Castle,
   Check,
+  Compass,
   Flag,
+  House,
   Lock,
-  MapPin,
   Minus,
+  Mountain,
   Plus,
   Swords,
+  Tent,
+  Trees,
 } from 'lucide-react'
 
 import { useRouter } from '@/i18n/navigation'
 
 import { useGame } from '@/store/game'
 import { chapterKey, stories } from '@/game/content/stories'
-import { campaigns, locations } from '@/game/content/world'
+import { resolveLocationVisuals } from '@/game/content/visual-themes'
+import { campaigns, locationMarkers, locations } from '@/game/content/world'
 import { sceneFor } from '@/game/core/session'
 import { canTravel } from '@/game/core/story'
 
 import Action from '@/components/Action'
 
 import style from './index.module.scss'
+
+const keyboardPan = {
+  ArrowLeft: [-96, 0], ArrowRight: [96, 0], ArrowUp: [0, -96], ArrowDown: [0, 96],
+}
+const markerIcons = { settlement: House, fortress: Castle, forest: Trees, cave: Mountain, landmark: Compass }
+const routePoints = (ids) => ids.map((id) => `${locations[id].x},${locations[id].y}`).join(' ')
+
+const currentScene = (location, progress, node) =>
+  location.id === progress.location ? node : undefined
 
 const World = ({ hero, progress, node, command }) => {
   const t = useTranslations()
@@ -36,14 +52,22 @@ const World = ({ hero, progress, node, command }) => {
   const drag = useRef(null)
   const dragged = useRef(false)
   const campaign = campaigns[hero.campaignId]
-  const target = locations[selected || progress.location]
+  const nextLocation = hero.route[progress.chapter + 1]
+  const openLocation = canTravel(hero, progress, nextLocation) ? nextLocation : null
+  const target = locations[selected || openLocation || progress.location]
+  const targetChapter = hero.route.indexOf(target.id)
+  const arrival = stories[hero.id][`${chapterKey(hero, targetChapter)}.dialogue`]
+  const preview = resolveLocationVisuals(hero.campaignId, target.id, currentScene(target, progress, node))
+  const description = t(arrival?.title ? `chronicle.landmarks.${arrival.title}` : `landmarks.${target.id}`)
   const canEnter = canTravel(hero, progress, target.id)
   const current = target.id === progress.location
   const bossAt = (id) => stories[hero.id][`${chapterKey(hero, hero.route.indexOf(id))}.choice`]?.boss
   const boss = bossAt(target.id)
   const showObjective = (current || canEnter) && node.type !== 'end'
   const pending = current && node.type === 'reward'
-  const sideAt = (id) => id === progress.location && (progress.side?.active || (node.type === 'camp' && !progress.side))
+  const sideAt = (id) => id === progress.location && (
+    progress.side?.active || (node.type === 'camp' && !progress.side && node.campTrial)
+  )
   const camp = sideAt(target.id)
 
   useEffect(() => {
@@ -86,6 +110,12 @@ const World = ({ hero, progress, node, command }) => {
       left + x - event.clientX,
       top + y - event.clientY
     )
+  }
+  const panWithKeys = (event) => {
+    const delta = keyboardPan[event.key]
+    if (!delta || event.target !== event.currentTarget) return
+    event.preventDefault()
+    event.currentTarget.scrollBy(...delta)
   }
   const end = () => {
     drag.current = null
@@ -139,6 +169,7 @@ const World = ({ hero, progress, node, command }) => {
             className={style.viewport}
             tabIndex={0}
             aria-label={t('world.pan')}
+            onKeyDown={panWithKeys}
             onPointerDown={begin}
             onPointerMove={pan}
             onPointerUp={end}
@@ -157,26 +188,16 @@ const World = ({ hero, progress, node, command }) => {
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <polyline className={style.path}
-                  points={hero.route
-                    .map((id) => `${locations[id].x},${locations[id].y}`)
-                    .join(' ')}
-                />
-                <polyline
-                  className={`${style.path} ${style.openPath}`}
-                  points={hero.route
-                    .slice(
-                      0,
-                      progress.chapter + (node.type === 'travel' ? 2 : 1)
-                    )
-                    .map((id) => `${locations[id].x},${locations[id].y}`)
-                    .join(' ')}
-                />
+                <polyline className={style.path} points={routePoints(hero.route)} />
+                <polyline className={style.visitedPath} points={routePoints(hero.route.slice(0, progress.chapter + 1))} />
+                {openLocation && <polyline className={style.openPath} points={routePoints([progress.location, openLocation])} />}
               </svg>
-              {campaign.locationIds.map((id) => {
+              {campaign.locationIds.map((id, index) => {
                 const state = status(id)
                 const special = sideAt(id) ? 'side' : bossAt(id) ? 'boss' : undefined
-                const Icon = { here: MapPin, open: Flag, visited: Check, locked: Lock }[state]
+                const Icon = special === 'side' ? Tent : special === 'boss' ? Swords : markerIcons[locationMarkers[id]]
+                const Status = state === 'locked' ? Lock : state === 'visited' ? Check : null
+                const label = state !== 'locked' || target.id === id || locationMarkers[id] === 'settlement'
                 const marker = [
                   locations[id].names[locale], t(`world.${state}`),
                   special === 'side' ? t('story.side') : special === 'boss' ? t('battle.boss') : null,
@@ -189,6 +210,7 @@ const World = ({ hero, progress, node, command }) => {
                     style={{ left: `${locations[id].x}%`, top: `${locations[id].y}%` }}
                     data-state={state}
                     data-special={special}
+                    data-label-below={index % 2 === 1}
                     aria-pressed={target.id === id}
                     aria-label={marker}
                     onClick={(event) => {
@@ -196,9 +218,8 @@ const World = ({ hero, progress, node, command }) => {
                     }}
                   >
                     <Icon size={state === 'locked' ? 12 : 17} aria-hidden />
-                    {special === 'side' && <BookOpen className={style.markerBadge} size={13} aria-hidden />}
-                    {special === 'boss' && <Swords className={style.markerBadge} size={13} aria-hidden />}
-                    <span className={style.tooltip} aria-hidden>{marker}</span>
+                    {Status && <Status className={style.markerBadge} size={11} aria-hidden />}
+                    {label && <span className={style.markerLabel} aria-hidden>{locations[id].names[locale]}</span>}
                   </button>
                 )
               })}
@@ -206,6 +227,11 @@ const World = ({ hero, progress, node, command }) => {
           </div>
         </section>
         <aside className={style.details}>
+          {preview.image && (
+            <div className={style.preview}>
+              <Image className={style.previewImage} src={preview.image} fill sizes="(max-width: 768px) 100vw, 400px" alt="" />
+            </div>
+          )}
           <p className={style.state} aria-live="polite">
             {status(target.id) === 'locked' && <Lock size={15} aria-hidden />}
             {t(`world.${status(target.id)}`)}
@@ -215,7 +241,7 @@ const World = ({ hero, progress, node, command }) => {
             <ul className={style.objectives}>
               <li className={style.objective}>
                 <BookOpen size={16} aria-hidden />
-                {t(`heroes.${hero.id}.quest`)}
+                {current && node.title ? t(`chronicle.titles.${node.title}.dialogue`) : t('story.chapter', { chapter: hero.route.indexOf(target.id) + 1 })}
               </li>
               {boss && (
                 <li className={style.objective}>
@@ -237,7 +263,7 @@ const World = ({ hero, progress, node, command }) => {
               )}
             </ul>
           )}
-          <p className={style.description}>{t(`landmarks.${target.id}`)}</p>
+          <p className={style.description}>{description}</p>
           {current && node.type !== 'travel' && (
             <Action href={`/play/${sceneFor(node)}`}>{t('world.enter')}</Action>
           )}

@@ -1,6 +1,5 @@
 import { art, locationArt } from './assets.js'
 import { heroes } from './heroes.js'
-import { campaigns } from './world.js'
 
 const palettes = {
   ember: ['#ffc48e', '#bb6341', '#27181d', '#87452d', '#ff704c'],
@@ -101,43 +100,49 @@ const tableVisuals = {
 }
 
 const painted = (id) => `/art/locations/${id}.webp`
-const locations = {
+export const locationVisuals = {
   shire: { image: '/art/war.webp', table: 'tavern', light: 'warm' },
   bree: { table: 'tavern', light: 'warm' },
   weathertop: { table: 'hall', light: 'cold' },
   rivendell: { table: 'elven', light: 'cold' },
-  moria: { table: 'dark', light: 'cold' },
+  moria: { image: locationArt.moria, table: 'dark', light: 'cold' },
   lorien: { table: 'elven', light: 'cool' },
   amon: { table: 'hall', light: 'cold' },
   rohan: { table: 'tavern', light: 'warm' },
   helm: { table: 'hall', light: 'cold' },
-  fangorn: { image: '/art/mirkwood.webp', table: 'elven', light: 'cool' },
+  fangorn: { image: null, table: 'elven', light: 'cool' },
   minas: { table: 'hall', light: 'warm' },
   marshes: { table: 'dark', light: 'cool' },
   ithilien: { table: 'elven', light: 'cool' },
   cirith: { table: 'dark', light: 'cold' },
   mordor: { table: 'dark', light: 'warm' },
-  doom: { image: painted('mordor'), table: 'dark', light: 'warm' },
+  doom: { image: null, table: 'dark', light: 'warm' },
   gate: { table: 'dark', light: 'cold' },
   trollshaws: { table: 'tavern', light: 'cool' },
   goblins: { table: 'dark', light: 'warm' },
   cave: { table: 'dark', light: 'cold' },
-  mirkwood: { table: 'elven', light: 'cool' },
+  mirkwood: { image: locationArt.mirkwood, table: 'elven', light: 'cool' },
   lake: { table: 'tavern', light: 'cold' },
   erebor: { table: 'hall', light: 'warm' },
   five: { table: 'hall', light: 'cold' },
   numenor: { table: 'hall', light: 'warm' },
   eregion: { table: 'elven', light: 'warm' },
   lindon: { table: 'elven', light: 'warm' },
-  khazad: { table: 'hall', light: 'cool' },
+  khazad: { image: locationArt.khazad, table: 'hall', light: 'cool' },
   rhun: { table: 'dark', light: 'cold' },
   southlands: { table: 'tavern', light: 'warm' },
 }
 
-const locationVariants = {
+export const locationVariants = {
   'hobbit:rivendell': { light: 'warm' },
   'hobbit:shire': { light: 'cool' },
   'power:mordor': { light: 'cold' },
+}
+
+// Illustrated event and camp overrides take priority when available.
+const eventVisuals = {
+  trollCache: { light: 'warm', position: 'center 55%' },
+  moonLetters: { light: 'cold', position: 'center 36%' },
 }
 
 export const symbolFallback = art.symbolFallback
@@ -147,19 +152,22 @@ export const phaseEffects = {
   shift: 'dark-ring',
   curse: 'veil',
 }
-const resolveScene = (campaignId, location, node) => {
+export const resolveLocationVisuals = (campaignId, location, node = {}) => {
   const campaign = campaignVisuals[campaignId]
-  const setting = {
-    ...locations[location],
-    ...locationVariants[`${campaignId}:${location}`],
-  }
+  const base = locationVisuals[location]
+  const variant = locationVariants[`${campaignId}:${location}`]
+  const event = eventVisuals[node.visual]
+  const setting = { ...base, ...variant, ...event }
   return {
     campaign: campaign.ambient,
     image:
-      setting.image ||
-      locationArt[location] ||
-      (locations[location] ? painted(location) : campaigns[campaignId].image),
+      event?.image ||
+      (node.type === 'camp' && (variant?.camp || base?.camp)) ||
+      variant?.image ||
+      (base && (base.image === undefined ? painted(location) : base.image)) ||
+      null,
     light: setting.light,
+    position: setting.position,
     table:
       node.side && setting.table !== 'dark'
         ? campaign.table
@@ -169,11 +177,11 @@ const resolveScene = (campaignId, location, node) => {
 }
 
 export const resolveVisuals = (hero, location, node) => ({
-  ...resolveScene(hero.campaignId, location, node),
+  ...resolveLocationVisuals(hero.campaignId, location, node),
   theme: heroVisuals[hero.id],
 })
 
 export const resolveTrialVisuals = (campaignId, location, node) => {
-  const scene = resolveScene(campaignId, location, node)
+  const scene = resolveLocationVisuals(campaignId, location, node)
   return { ...scene, theme: tableVisuals[scene.table] }
 }

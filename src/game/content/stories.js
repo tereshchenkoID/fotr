@@ -1,4 +1,5 @@
 import { heroes } from './heroes.js'
+import { thorinChapters } from './thorin-story.js'
 
 const routeStyles = {
   frodo: ['dice', 'blackjack', 'battle'],
@@ -35,6 +36,27 @@ const locationEnemy = {
   erebor: 'dragon',
 }
 
+const encounterTypes = ['battle', 'blackjack', 'dice']
+const settlementTrials = {
+  shire: ['dice', 'blackjack'],
+  bree: ['dice', 'blackjack'],
+  rivendell: ['dice'],
+  lake: ['blackjack', 'dice'],
+  numenor: ['blackjack', 'dice'],
+  rohan: ['dice'],
+  minas: ['blackjack'],
+  lindon: ['dice'],
+  southlands: ['blackjack'],
+  eregion: ['blackjack'],
+}
+const alternatives = {
+  shire: ['battle'],
+  bree: ['battle'],
+  trollshaws: ['dice'],
+  goblins: ['dice'],
+  southlands: ['battle'],
+}
+
 export const chapterKey = (hero, index) => `${hero.storyId}-${index}`
 
 const addChapter = (graph, hero, location, chapter) => {
@@ -55,9 +77,14 @@ const addChapter = (graph, hero, location, chapter) => {
   }
   add('dialogue', { next: nodeId('checkpoint') })
   add('checkpoint', { next: nodeId('choice') })
+  const context = settlementTrials[location] || ['battle']
   const paths = boss
     ? ['battle']
-    : [main, ...['battle', 'blackjack', 'dice'].filter((type) => type !== main)]
+    : [...new Set([
+        context.includes(main) ? main : context[0],
+        ...context,
+        ...(alternatives[location] || []),
+    ])]
   const reward = nodeId('reward')
   const actions = paths.map((id) => ({ id, next: nodeId(id) }))
   if (!boss) {
@@ -85,7 +112,8 @@ const addChapter = (graph, hero, location, chapter) => {
     }
   }
   add('choice', { actions, boss })
-  for (const type of paths) {
+  // Keep old encounter IDs loadable even when a new choice no longer offers them.
+  for (const type of boss ? paths : encounterTypes) {
     add(type, { enemy, boss, next: reward })
   }
   add('reward', {
@@ -99,11 +127,44 @@ const addChapter = (graph, hero, location, chapter) => {
       achievement: final ? 'finished' : 'first',
     },
   })
-  add('camp', { next: nodeId('travel') })
+  add('camp', {
+    next: nodeId('travel'),
+    campTrial: settlementTrials[location]
+      ? hero.campaignId === 'war' ? 'blackjack' : 'dice'
+      : null,
+  })
   add('travel', {
     next: final ? null : `${chapterKey(hero, chapter + 1)}.dialogue`,
   })
   add('end', {})
+
+  const chapterStory = hero.id === 'thorin' && thorinChapters[location]
+  if (chapterStory) {
+    for (const name of ['dialogue', 'choice', 'reward', 'camp']) {
+      graph[nodeId(name)].title = chapterStory.title
+    }
+    for (const [name, scene] of Object.entries(chapterStory.scenes)) {
+      const id = nodeId(name)
+      graph[id] = {
+        ...graph[id],
+        id,
+        location,
+        chapter,
+        title: chapterStory.title,
+        ...scene,
+        ...(scene.next && { next: nodeId(scene.next) }),
+        ...(scene.actions && {
+          actions: scene.actions.map((action) => ({
+            ...action,
+            next: nodeId(action.next),
+          })),
+        }),
+      }
+    }
+    if (location === 'trollshaws') {
+      for (const type of ['blackjack', 'dice']) graph[nodeId(type)].next = nodeId('dawn')
+    }
+  }
 }
 
 export const stories = Object.fromEntries(

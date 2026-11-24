@@ -21,7 +21,7 @@ const VisualScene = ({ visuals, className, scenery = true, children }) => {
         '--theme-glow': glow,
       }}
     >
-      {scenery && (
+      {scenery && visuals.image && (
         <div className={style.scenery} aria-hidden>
           <Image
             className={style.image}

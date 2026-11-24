@@ -56,10 +56,7 @@ export const battleSequence = (previous, result, boss, reduced, compact) => {
   if (result.feedback?.phaseChanged)
     steps.push({ stage: 'phase', duration: 460 })
   if (result.result === 'win' && boss)
-    steps.push({
-      stage: 'victory',
-      duration: compact ? 980 : 1350,
-    })
+    steps.push({ stage: 'victory', duration: null })
   return steps
 }
 

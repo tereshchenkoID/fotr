@@ -11,6 +11,18 @@
     background: linear-gradient(90deg, #090c1240, #090c128c, #090c1240);
   }
 
+  &[data-inline='true'] {
+    position: static;
+    min-block-size: 2.2rem;
+    background: none;
+
+    .label {
+      padding: 0.15em 0.55em;
+      box-shadow: none;
+      font-size: 1rem;
+    }
+  }
+
   &[data-outcome='win'] {
     --outcome-color: #f8de9d;
     --outcome-surface: #211a0f;

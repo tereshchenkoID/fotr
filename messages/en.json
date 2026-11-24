@@ -147,7 +147,27 @@
     "continue": "Continue",
     "claim": "Claim rewards",
     "side": "Optional camp trial",
-    "newJourney": "Choose another journey"
+    "newJourney": "Choose another journey",
+    "checkpointSaved": "Saved at this encounter",
+    "skipText": "Reveal text",
+    "claimAndEquip": "Claim and equip",
+    "levelReward": "Level {value} on claim",
+    "talk": "Talk to {name}",
+    "continueJourney": "Continue the journey",
+    "rest": "Rest",
+    "campTrial": {
+      "dice": "Play dice at camp",
+      "blackjack": "Play cards at camp"
+    },
+    "restedCamp": "The company has rested. Check your gear or speak with your companions before setting out.",
+    "choiceEffect": {
+      "battle": "Fight a battle on the reels. Defeat returns you to the checkpoint.",
+      "blackjack": "Play for information. A loss reduces the coin reward; the journey continues.",
+      "dice": "Play a three-round duel. A loss reduces the coin reward; the journey continues.",
+      "negotiate": "Use your standing to open the way without a contest.",
+      "useArtifact": "Use the equipped Forge Ember to open the way.",
+      "corrupt": "Use your influence to forge a pact and earn the Ring of Dominion."
+    }
   },
   "choice": {
     "battle": "Fight",
@@ -161,7 +181,8 @@
   "requirements": {
     "negotiate": "Requires 2 reputation",
     "useArtifact": "Equip the Forge Ember",
-    "corrupt": "Requires 2 influence"
+    "corrupt": "Requires 2 influence",
+    "sneak": "Equip the Waystone."
   },
   "battle": {
     "boss": "Boss encounter",
@@ -219,7 +240,8 @@
       "tavern": "Innkeeper",
       "hall": "Hall steward",
       "elven": "Court envoy",
-      "dark": "Shadow warden"
+      "dark": "Shadow warden",
+      "lakeTrader": "Lake-town trader"
     },
     "bust": "Bust"
   },
@@ -701,5 +723,117 @@
     "focusEffect": "Focus",
     "magic": "Magic",
     "curse": "Weaken"
+  },
+  "chronicle": {
+    "titles": {
+      "trollshaws": {
+        "dialogue": "Smoke among the trees",
+        "choice": "The trolls’ fire",
+        "reward": "The cache under the hill",
+        "camp": "Camp below the ridge"
+      },
+      "rivendell": {
+        "dialogue": "The hidden valley",
+        "choice": "Thrór’s map",
+        "reward": "A gift for the road",
+        "camp": "Rest in Rivendell"
+      },
+      "lake": {
+        "dialogue": "The halls above the lake",
+        "choice": "Bargain at the quay",
+        "reward": "The harbor bargain",
+        "camp": "Lake-town camp"
+      }
+    },
+    "lines": {
+      "trollTracks": {
+        "title": "Missing provisions",
+        "text": "Two bags are missing from the mule. See how the drag marks leave the track? Whoever took them is carrying them toward that smoke."
+      },
+      "trollFire": {
+        "title": "The trolls’ fire",
+        "text": "Three trolls, all arguing over the same pot. If I can keep them talking until sunrise, they may forget there’s anyone else in these woods."
+      },
+      "trollDawn": {
+        "title": "First light",
+        "text": "Keep back from the clearing. The first light has turned the trolls to stone, and their footprints lead to a cave under that ridge."
+      },
+      "trollCache": {
+        "title": "Under the ridge",
+        "text": "Here are the company’s provisions. Leave the heavy chests. Take what we can carry, and wrap those blades until someone can read the marks."
+      },
+      "trollSpoils": {
+        "title": "Spoils of the cave",
+        "text": "The company recovers its provisions and takes a share of the trolls’ abandoned hoard."
+      },
+      "trollCamp": {
+        "title": "By the fire",
+        "text": "The packs are dry again. Sit a while. I have five dice and a stump wide enough for a game."
+      },
+      "elrondWelcome": {
+        "title": "A welcome in the valley",
+        "text": "The bridges are watched, and there are beds for your company. You may rest before you decide what to tell me of your road."
+      },
+      "thorinReserve": {
+        "title": "Thorin’s reserve",
+        "text": "I am grateful for the shelter. The map is another matter. It belonged to my grandfather, and I know too little of our host to unfold it lightly."
+      },
+      "balinCounsel": {
+        "title": "Balin’s counsel",
+        "text": "Tell him what we need to find, Thorin. He can read the marks without being told what you mean to do with the mountain."
+      },
+      "elrondRunes": {
+        "title": "Moon-letters",
+        "text": "Bring the parchment where the moon can reach it. The hidden writing tells of a thrush, the last light of Durin’s Day, and a place where it will reveal the keyhole."
+      },
+      "mountainPass": {
+        "title": "The mountain road",
+        "text": "We cross into the Misty Mountains when the company is rested. I’ll ask the valley’s scouts which paths still hold after the rain."
+      },
+      "rivendellGift": {
+        "title": "A gift from the hearth",
+        "text": "The valley’s smiths send a Forge Ember with the company. Take it before leaving for the mountain passes."
+      },
+      "rivendellRest": {
+        "title": "Before departure",
+        "text": "Eat and sleep while the roads are quiet. I’ve asked my scouts to bring word of the pass before you set out."
+      }
+    },
+    "actions": {
+      "battle": {
+        "name": "Face the trolls",
+        "effect": "Fight for the missing supplies. A defeat returns you to this checkpoint."
+      },
+      "distract": {
+        "name": "Distract the trolls",
+        "effect": "Give Bilbo time to keep them talking until dawn. Earn reputation without a fight."
+      },
+      "sneak": {
+        "name": "Slip past the fire",
+        "effect": "Follow the trail with the Waystone equipped. Recover an extra 4 coins from a side pocket of the cave."
+      },
+      "showMap": {
+        "name": "Show Elrond the map",
+        "effect": "Trust Elrond with Thrór’s map and go straight to the reading."
+      },
+      "askBalin": {
+        "name": "Speak to Balin first",
+        "effect": "Ask Balin how to approach Elrond. Gain 5 XP and unlock an extra conversation."
+      },
+      "blackjack": {
+        "name": "Play the quay trader",
+        "effect": "Play a hand for supplies and information. Losing costs part of the coin reward; the road stays open."
+      },
+      "negotiate": {
+        "name": "Ask the traders for passage",
+        "effect": "Use your reputation to make an agreement without playing cards."
+      }
+    },
+    "campDice": "Balin has cleared a stump by the fire. Play five dice against him while the others sleep.",
+    "landmarks": {
+      "trollshaws": "A trail of missing provisions leads into the woods. Smoke rises from a clearing off the road.",
+      "rivendell": "Elrond offers the company shelter in the valley. There is time to study Thrór’s map before crossing the Misty Mountains.",
+      "lake": "The company looks for supplies and information among the markets on the lake."
+    }
   }
 }

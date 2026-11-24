@@ -26,6 +26,7 @@ const JackpotCinematicController = ({
   const t = useTranslations()
   const victory = phase === 'victory'
   const impact = phase === 'impact' || phase === 'recovery'
+  const exitLabel = t(victory ? 'story.continue' : 'battle.skip')
   const headline = victory ? t('results.win') : t(`heroes.${hero.id}.jackpot`)
   const relic = visuals.symbols[scene.relic]?.image || symbolFallback
   const figures = ['attack', 'blocked', 'healing', 'shield', 'focus'].filter(
@@ -135,11 +136,11 @@ const JackpotCinematicController = ({
         variant="secondary"
         className={style.skip}
         onClick={onSkip}
-        aria-label={t('battle.skip')}
-        title={t('battle.skip')}
+        aria-label={exitLabel}
+        title={exitLabel}
       >
         <FastForward size={17} aria-hidden />
-        <span className={style.skipLabel}>{t('battle.skip')}</span>
+        <span className={style.skipLabel}>{exitLabel}</span>
       </Action>
     </section>
   )

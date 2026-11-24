@@ -52,7 +52,7 @@ describe('Battle presentation', () => {
     }
   )
 
-  it('plays boss victories and skips the portrait cutaway for ordinary victories', () => {
+  it('holds boss victories for dismissal and skips the cutaway for ordinary victories', () => {
     const hero = heroes.thorin
     const progress = newProgress(hero)
     const before = {
@@ -90,7 +90,9 @@ describe('Battle presentation', () => {
       'victory',
     ])
     expect(stages(mobile)).toEqual(stages(desktop))
-    expect(mobile.at(-1).duration).toBeLessThan(desktop.at(-1).duration)
+    expect(desktop.at(-1)).toEqual({ stage: 'victory', duration: null })
+    expect(mobile.at(-1)).toEqual(desktop.at(-1))
+    expect(battleSequence(before, normal, true, true, false)).toEqual([])
     expect(victoryScene('dragon').style).toBe('embers')
     expect(victoryScene('balrog').style).toBe('fracture')
     expect(victoryScene('azog').style).toBe('iron')

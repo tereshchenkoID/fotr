@@ -6,7 +6,7 @@ import style from './index.module.scss'
 
 const icons = { win: Check, loss: X, draw: Minus }
 
-const TrialOutcome = ({ outcome }) => {
+const TrialOutcome = ({ outcome, inline = false }) => {
   const t = useTranslations('results')
   const [initialOutcome] = useState(outcome)
   const Icon = icons[outcome]
@@ -15,6 +15,7 @@ const TrialOutcome = ({ outcome }) => {
     <div
       className={style.block}
       role="status"
+      data-inline={inline}
       data-outcome={outcome || undefined}
       data-entering={!!outcome && !initialOutcome}
     >

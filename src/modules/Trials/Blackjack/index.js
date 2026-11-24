@@ -63,7 +63,7 @@ const PlayingCard = ({ card, hidden, delay }) => {
   )
 }
 
-const Hand = ({ event, before, dealer, table, waitingReveal }) => {
+const Hand = ({ event, before, dealer, dealerName, waitingReveal }) => {
   const t = useTranslations('trials')
   const key = dealer ? 'dealer' : 'player'
   const cards = event[key]
@@ -76,10 +76,10 @@ const Hand = ({ event, before, dealer, table, waitingReveal }) => {
   return (
     <section className={style.hand} data-dealer={dealer} data-tone={tone}>
       <h2 className={style.handTitle}>
-        {t(dealer ? `dealers.${table}` : 'player')}
+        {t(dealer ? `dealers.${dealerName}` : 'player')}
         {shown[key].length > 0 && (
           <span className={style.score} aria-live="polite">
-            {tone ? t(tone) : total}
+            {total}{tone && ` · ${t(tone)}`}
           </span>
         )}
       </h2>
@@ -96,7 +96,7 @@ const Hand = ({ event, before, dealer, table, waitingReveal }) => {
   )
 }
 
-const Blackjack = ({ event, play, busy, result, visuals }) => {
+const Blackjack = ({ event, play, busy, result, visuals, dealerName = visuals.table }) => {
   const t = useTranslations('trials')
   const started = event.player.length > 0
   const turn = trialTurn('blackjack', event)
@@ -121,12 +121,12 @@ const Blackjack = ({ event, play, busy, result, visuals }) => {
   return (
     <>
       <div ref={table} className={style.block} aria-busy={dealing} data-card-back={visuals.theme.material}>
-        <Hand event={event} before={before} dealer table={visuals.table} waitingReveal={waitingReveal} />
-        <div className={style.divider} aria-hidden>
-          <span className={style.deck} ref={deck}><Orbit size={22} strokeWidth={1.35} /></span>
+        <Hand event={event} before={before} dealer dealerName={dealerName} waitingReveal={waitingReveal} />
+        <div className={style.divider}>
+          <span className={style.deck} ref={deck} aria-hidden><Orbit size={22} strokeWidth={1.35} /></span>
+          <div className={style.verdict}><TrialOutcome outcome={outcome} inline /></div>
         </div>
-        <Hand event={event} before={before} table={visuals.table} />
-        <TrialOutcome outcome={outcome} />
+        <Hand event={event} before={before} />
       </div>
       {!outcome ? (
         <div className={style.actions}>

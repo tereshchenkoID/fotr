@@ -8,6 +8,7 @@ export const getNode = (hero, progress) => {
       location: progress.location,
       chapter: progress.chapter,
       side: true,
+      speaker: stories[hero.id][progress.node].speaker,
     }
   }
   return stories[hero.id][progress.node]
@@ -22,8 +23,11 @@ export const canChoose = (action, progress) =>
       : (progress.flags[key] || 0) >= value
   )
 
+export const chapterReward = (node, progress) =>
+  progress.result === 'loss' ? { ...node.reward, coins: 4 } : node.reward
+
 export const canTravel = (hero, progress, location) =>
-  hero.route[progress.chapter + 1] === location &&
+  !!location && hero.route[progress.chapter + 1] === location &&
   getNode(hero, progress).type === 'travel'
 
 export const markChoice = (hero, progress, choice) => {

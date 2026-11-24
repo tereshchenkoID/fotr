@@ -199,7 +199,6 @@
   background:
     radial-gradient(ellipse at 55% 56%, #db65399c, transparent 53%),
     linear-gradient(0deg, #120d13, transparent);
-  animation: smoke 1.2s ease-out both;
 }
 
 .block[data-scene='fracture'] .atmosphere {
@@ -215,7 +214,6 @@
       transparent 73%
     ),
     radial-gradient(ellipse at 60% 76%, #d56140b0, #140d17 68%);
-  animation: strike 780ms ease-out both;
 }
 
 @keyframes scene-in {
@@ -353,20 +351,26 @@
   }
 
   to {
-    opacity: 0.24;
-    transform: translateY(7%) scale(1.05);
+    opacity: 0.64;
+    transform: translateY(3%) scale(1.05);
   }
 }
 
-@keyframes smoke {
+@keyframes victory-glow {
   from {
-    opacity: 0.82;
-    transform: scale(0.9);
+    opacity: 0.36;
+    transform: scale(1);
   }
 
   to {
-    opacity: 0.34;
-    transform: translateY(-9%) scale(1.17);
+    opacity: 0.62;
+    transform: translateY(-3%) scale(1.07);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .block[data-phase='victory'] .atmosphere {
+    animation: victory-glow 3s ease-in-out infinite alternate;
   }
 }
 
@@ -374,6 +378,10 @@
   .description,
   .skipLabel {
     display: none;
+  }
+
+  .block[data-phase='victory'] .skipLabel {
+    display: inline;
   }
 
   .block .relic {

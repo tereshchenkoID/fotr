@@ -8,6 +8,7 @@ import { grant } from './rewards.js'
 import {
   canChoose,
   canTravel,
+  chapterReward,
   getNode,
   markChoice,
   startNode,
@@ -108,19 +109,26 @@ const finishEvent = (save, hero, progress, node) => {
   progress.node = node.next
 }
 
-const advance = (save, hero, progress, node) => {
+const advance = (save, hero, progress, node, command) => {
   if (node.side || ['battle', 'blackjack', 'dice'].includes(node.type)) {
     finishEvent(save, hero, progress, node)
     return
   }
   if (!node.next || ['travel', 'choice'].includes(node.type)) return
-  if (node.type === 'checkpoint') progress.checkpoint = node.next
+  const next = getNode(hero, { ...progress, node: node.next })
+  if (node.type === 'checkpoint' || next.type === 'checkpoint') {
+    progress.checkpoint = next.type === 'checkpoint' ? next.next : next.id
+    progress.node = progress.checkpoint
+    return
+  }
   if (node.type === 'camp') progress.hp = heroStats(hero, progress).hp
   if (node.type === 'reward') {
-    const reward =
-      progress.result === 'loss' ? { ...node.reward, coins: 4 } : node.reward
-    grant(save, hero, progress, node.id, reward)
-    progress.completed.push(node.location)
+    grant(save, hero, progress, node.id, chapterReward(node, progress))
+    const item = node.reward.item
+    if (command.equip === item && progress.inventory.includes(item) && !progress.equipped.includes(item) &&
+      progress.equipped.length < 2) progress.equipped.push(item)
+    if (!progress.completed.includes(node.location)) progress.completed.push(node.location)
+    if (next.autoRest) progress.hp = heroStats(hero, progress).hp
   }
   progress.node = node.next
 }
@@ -133,10 +141,13 @@ const choose = (save, hero, progress, node, command, random) => {
   if (!progress.flags[mark] || choice.flag)
     progress.flags = markChoice(hero, progress, choice)
   progress.flags[mark] = 1
+  if (choice.reward) grant(save, hero, progress, `${node.id}:${choice.id}`, choice.reward)
   if (choice.id === 'corrupt')
     grant(save, hero, progress, 'dominion', { item: 'dominion' })
   progress.node = choice.next
-  progress.event = launch(hero, progress, getNode(hero, progress), random)
+  const next = getNode(hero, progress)
+  if (next.type === 'battle') progress.checkpoint = node.id
+  progress.event = launch(hero, progress, next, random)
 }
 
 export const applyCommand = (current, command, random = Math.random) => {
@@ -158,7 +169,7 @@ export const applyCommand = (current, command, random = Math.random) => {
   if (command.node !== node.id) return current
   switch (command.type) {
     case 'advance':
-      advance(save, hero, progress, node)
+      advance(save, hero, progress, node, command)
       break
     case 'choose':
       choose(save, hero, progress, node, command, random)
@@ -174,18 +185,21 @@ export const applyCommand = (current, command, random = Math.random) => {
       progress.node = node.next
       progress.result = null
       break
-    case 'side':
-      if (node.type !== 'camp' || progress.side) return current
-      progress.side = {
-        active: true,
-        type: hero.campaignId === 'war' ? 'blackjack' : 'dice',
-      }
+    case 'side': {
+      const type = node.campTrial
+      if (node.type !== 'camp' || progress.side || !type) return current
+      progress.side = { active: true, type }
       progress.side.game = launch(
         hero,
         progress,
         getNode(hero, progress),
         random
       )
+      break
+    }
+    case 'rest':
+      if (node.type !== 'camp') return current
+      progress.hp = heroStats(hero, progress).hp
       break
     case 'equip':
       if (

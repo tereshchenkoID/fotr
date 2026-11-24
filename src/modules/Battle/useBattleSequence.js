@@ -31,7 +31,7 @@ export const useBattleSequence = (snapshot, boss) => {
 
   const step = frame.steps[frame.index]
   useEffect(() => {
-    if (!step) return
+    if (step?.duration == null) return
     const timer = window.setTimeout(() => {
       setFrame((current) =>
         current.steps[current.index] === step
