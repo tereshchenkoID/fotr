@@ -1,5 +1,6 @@
 import { chapterKey, stories } from '../content/stories.js'
 
+import { unclaimedReward } from './rewards.js'
 import { encounterPrize } from './trials.js'
 
 export const getNode = (hero, progress) => {
@@ -35,8 +36,18 @@ export const automaticGame = (node, progress) => {
 }
 
 export const chapterReward = (node, progress) =>
-  encounterPrize(node, progress.trialOutcome?.rewardNode === node.id
-    ? progress.trialOutcome.game : undefined, progress.result)
+  unclaimedReward(progress, node.id, encounterPrize(
+    node,
+    progress.trialOutcome?.rewardNode === node.id ? progress.trialOutcome.game : undefined,
+    progress.result
+  ))
+
+export const storyLine = (node, progress) =>
+  node.lineVariants?.find(({ flag, item, completed }) =>
+    (!flag || progress.flags[flag]) &&
+    (!item || progress.inventory.includes(item)) &&
+    (!completed || progress.completed.includes(completed))
+  )?.line || node.line
 
 export const canTravel = (hero, progress, location) =>
   !!location && hero.route[progress.chapter + 1] === location &&

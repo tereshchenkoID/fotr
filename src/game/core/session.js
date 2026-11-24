@@ -16,7 +16,9 @@ import {
   markChoice,
   startNode,
 } from './story.js'
-import { campGames, gameTypes, trialOutcome } from './trials.js'
+import {
+  campGames, gameTypes, nextReward, trialOutcome
+} from './trials.js'
 
 export const saveVersion = 3
 export const initialSave = () => ({
@@ -91,16 +93,16 @@ const playEvent = (save, hero, progress, node, command, random) => {
 const finishEvent = (save, hero, progress, node) => {
   const event = node.side ? progress.side.game : progress.event
   if (!event?.result || event.cinematic) return false
-  const reward = node.side ? null : stories[hero.id][node.next]
-  const outcome = trialOutcome(node, event, reward, progress.checkpoint)
+  const reward = node.side ? null : nextReward(stories[hero.id], node)
+  const outcome = trialOutcome(node, event, reward, progress)
   if (node.side) {
     progress.side.active = false
-    progress.side.outcome = outcome
-    if (outcome.reward) grant(save, hero, progress, 'side', outcome.reward)
+    const awarded = grant(save, hero, progress, 'side', outcome.reward)
+    progress.side.outcome = { ...outcome, reward: awarded }
     return true
   }
   progress.event = null
-  progress.result = outcome.result
+  progress.result = stories[hero.id][node.next]?.type === 'checkpoint' ? null : outcome.result
   progress.trialOutcome = outcome
   if (outcome.game === 'battle' && outcome.result === 'loss') {
     progress.node = progress.checkpoint
@@ -108,6 +110,7 @@ const finishEvent = (save, hero, progress, node) => {
     return true
   }
   if (outcome.result === 'win') {
+    if (node.boss && node.type === 'battle') progress.flags[`defeated-${node.enemy}`] = 1
     const achievement = outcome.game === 'blackjack' ? 'cards' : outcome.game
     grant(save, hero, progress, achievement, { achievement })
   }

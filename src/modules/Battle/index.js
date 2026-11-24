@@ -20,9 +20,12 @@ import { stories } from '@/game/content/stories'
 import { phaseEffects, resolveVisuals } from '@/game/content/visual-themes'
 import { locations } from '@/game/content/world'
 import { convertTarget } from '@/game/core/battle'
+import { nextReward, trialOutcome } from '@/game/core/trials'
 
 import Action from '@/components/Action'
+import Disclosure from '@/components/Disclosure'
 import Meter from '@/components/Meter'
+import RewardSummary from '@/components/RewardSummary'
 import VisualScene from '@/modules/VisualScene'
 
 import {
@@ -155,40 +158,6 @@ const Combatant = ({
   </div>
 )
 
-const BattlePopover = ({ className, toggleClassName, label, children, panel }) => {
-  const disclosure = useRef(null)
-
-  useEffect(() => {
-    const element = disclosure.current
-    const dismissOutside = (event) => {
-      if (element.open && !element.contains(event.target)) element.open = false
-    }
-    const dismissOnEscape = (event) => {
-      if (event.key !== 'Escape' || !element.open) return
-      if (element.contains(document.activeElement)) {
-        element.querySelector('summary').focus()
-      }
-      element.open = false
-    }
-
-    document.addEventListener('click', dismissOutside, true)
-    document.addEventListener('keydown', dismissOnEscape)
-    return () => {
-      document.removeEventListener('click', dismissOutside, true)
-      document.removeEventListener('keydown', dismissOnEscape)
-    }
-  }, [])
-
-  return (
-    <details className={className} ref={disclosure}>
-      <summary className={toggleClassName} aria-label={label}>
-        {children}
-      </summary>
-      {panel}
-    </details>
-  )
-}
-
 const Battle = ({ hero, progress, node, command }) => {
   const t = useTranslations()
   const locale = useLocale()
@@ -269,23 +238,43 @@ const Battle = ({ hero, progress, node, command }) => {
   useEffect(() => {
     if (
       !committed.cinematic ||
-      pending ||
+      (pending && stage !== 'victory') ||
       busy ||
       acknowledged.current === committed.turn
     )
       return
     acknowledged.current = committed.turn
     void command({ type: 'play', action: 'dismiss', turn: committed.turn })
-  }, [busy, command, committed.cinematic, committed.turn, pending])
+  }, [busy, command, committed.cinematic, committed.turn, pending, stage])
 
-  const showingVictory = stage === 'victory'
-  const scene = showingVictory
-    ? victoryScene(battle.enemyId)
-    : jackpotActive && ['cinematic', 'impact', 'recovery'].includes(stage)
-      ? heroScene(hero, visuals.theme)
-      : null
+  const scene = jackpotActive && ['cinematic', 'impact', 'recovery'].includes(stage)
+    ? heroScene(hero, visuals.theme)
+    : null
   const enemyPortrait = enemyArt[battle.enemyId] || art.enemy
-  const reward = stories[hero.id][node.next]?.reward
+  const reward = victory
+    ? trialOutcome(node, committed, nextReward(stories[hero.id], node), progress).reward
+    : null
+  const showingVictory = node.boss && victory && (stage === 'victory' || !pending)
+  const advance = () => command({ type: 'advance' })
+
+  if (showingVictory) {
+    return (
+      <VisualScene className={style.block} visuals={visuals} scenery={false}>
+        <JackpotCinematicController
+          hero={hero}
+          visuals={visuals.theme}
+          enemy={enemyPortrait}
+          enemyName={enemyName}
+          scene={victoryScene(battle.enemyId)}
+          phase="victory"
+          reward={reward}
+          disabled={busy || !!committed.cinematic}
+          onContinue={advance}
+        />
+      </VisualScene>
+    )
+  }
+
   const spotlight =
     stage === 'anticipation' ? jackpotLine(committed, hero.jackpot) : null
 
@@ -305,7 +294,7 @@ const Battle = ({ hero, progress, node, command }) => {
           <p className={style.caption}>
             {t('battle.turn', { value: battle.turn })}
           </p>
-          <BattlePopover
+          <Disclosure
             className={style.rules}
             toggleClassName={style.infoToggle}
             label={t('combatUi.rules')}
@@ -317,10 +306,10 @@ const Battle = ({ hero, progress, node, command }) => {
             }
           >
             <Info className={style.icon} size={17} aria-hidden />
-          </BattlePopover>
+          </Disclosure>
         </div>
       </header>
-      <div className={style.arena} data-stage={stage} data-boss={!!node.boss}>
+      <div className={style.arena} data-boss={!!node.boss}>
         <div className={style.hero}>
           <Combatant
             name={t(hero.nameKey)}
@@ -368,7 +357,7 @@ const Battle = ({ hero, progress, node, command }) => {
           />
         </div>
         <div className={style.machine} data-finished={finished}>
-          {!finished && (
+          {!battle.result && (
             <Meter
               label={t('game.focus')}
               value={battle.focus}
@@ -384,7 +373,7 @@ const Battle = ({ hero, progress, node, command }) => {
               before={spin ? before : null}
               play={play}
               locked={locked}
-              showHolds={!finished}
+              showHolds={!battle.result}
               spotlight={spotlight}
             />
             {scene && (
@@ -396,7 +385,6 @@ const Battle = ({ hero, progress, node, command }) => {
                 phase={stage}
                 feedback={current}
                 changes={changes}
-                reward={node.boss ? reward : null}
                 onSkip={sequence.skip}
               />
             )}
@@ -407,18 +395,12 @@ const Battle = ({ hero, progress, node, command }) => {
                 <h2 className={style.resultTitle}>
                   {t(`results.${battle.result}`)}
                 </h2>
-                {node.boss && victory && reward && (
-                  <p className={style.reward}>
-                    {t('story.coins', { value: reward.coins })} ·{' '}
-                    {t('story.xp', { value: reward.xp })}
-                    {reward.item && ` · ${t(`items.${reward.item}.name`)}`}
-                  </p>
-                )}
+                <RewardSummary reward={reward} />
               </div>
               <Action
                 className={style.continue}
                 disabled={busy}
-                onClick={() => command({ type: 'advance' })}
+                onClick={advance}
               >
                 {t(
                   `battle.${battle.result === 'win' ? 'spoils' : 'checkpoint'}`
@@ -433,7 +415,7 @@ const Battle = ({ hero, progress, node, command }) => {
             >
               {t('battle.skip')}
             </Action>
-          ) : (
+          ) : !battle.result ? (
             <div className={style.actions}>
               <Action
                 className={style.attack}
@@ -495,10 +477,10 @@ const Battle = ({ hero, progress, node, command }) => {
                 />
               </div>
             </div>
-          )}
-          {!finished && !victory && !scene && (
+          ) : null}
+          {!battle.result && !scene && (
             <div className={style.details}>
-              <BattlePopover
+              <Disclosure
                 className={style.help}
                 toggleClassName={style.helpToggle}
                 panel={
@@ -568,7 +550,7 @@ const Battle = ({ hero, progress, node, command }) => {
               >
                 <HelpCircle className={style.icon} size={15} aria-hidden />
                 {t('combatUi.help')}
-              </BattlePopover>
+              </Disclosure>
               {progress.equipped.length > 0 && (
                 <p className={style.equipped}>
                   {t('game.equipped')}:{' '}

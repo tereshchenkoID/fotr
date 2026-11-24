@@ -19,6 +19,8 @@
   display: grid;
   justify-items: center;
   gap: 0.18rem;
+  position: relative;
+  padding-inline: 2.45rem;
   text-align: center;
 
   .title {
@@ -59,7 +61,35 @@
   }
 }
 
-.prize {
-  font-size: 0.85rem;
+.rules {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 5;
+}
+
+.ruleButton {
+  @include flex($align-items: center, $justify-content: center);
+
+  inline-size: 2.45rem;
+  block-size: 2.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #10161d;
   color: var(--gold-bright);
+}
+
+.rulePanel {
+  position: absolute;
+  inset-block-start: calc(100% + 0.35rem);
+  inset-inline-end: 0;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #141c25;
+  box-shadow: 0 0.5rem 1.5rem #080b10b0;
+  font-size: 0.83rem;
+  text-align: start;
+  color: var(--text);
+  inline-size: min(18rem, 75vw);
 }

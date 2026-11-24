@@ -1,5 +1,7 @@
 import { useTranslations } from 'next-intl'
-import { Coins, Dices, Layers } from 'lucide-react'
+import {
+  Coins, Dices, Info, Layers
+} from 'lucide-react'
 
 import { useGame } from '@/store/game'
 import { enemyArt } from '@/game/content/assets'
@@ -7,9 +9,11 @@ import { heroes } from '@/game/content/heroes'
 import { stories } from '@/game/content/stories'
 import { resolveTrialVisuals } from '@/game/content/visual-themes'
 import { trialTurn } from '@/game/core/session'
-import { trialOutcome } from '@/game/core/trials'
+import { nextReward, trialOutcome } from '@/game/core/trials'
 
 import Action from '@/components/Action'
+import Disclosure from '@/components/Disclosure'
+import RewardSummary from '@/components/RewardSummary'
 import VisualScene from '@/modules/VisualScene'
 
 import Blackjack from './Blackjack'
@@ -42,23 +46,16 @@ const Trials = ({ hero, progress, node, command }) => {
       : node.enemy
         ? { name: t(`enemies.${node.enemy}`), portrait: enemyArt[node.enemy] }
         : { name: t(`trials.dealers.${visuals.table}`) }
-  const prize =
-    event.result &&
-    trialOutcome(node, event, stories[hero.id][node.next]).reward
-  const showPrize = coin && prize
+  const prize = event.result && trialOutcome(
+    node, event, node.side ? null : nextReward(stories[hero.id], node), progress
+  ).reward
   const result = event.result && (
     <div className={style.result} data-result={event.result}>
       {!cards && <TrialOutcome outcome={event.result} />}
       <p className={style.description}>
         {t(`trials.${node.side ? 'side' : 'main'}${event.result}`)}
       </p>
-      {showPrize && (
-        <p className={style.prize}>
-          {t('story.coins', { value: prize.coins })} ·{' '}
-          {t('story.xp', { value: prize.xp })}
-          {prize.item && ` · ${t(`items.${prize.item}.name`)}`}
-        </p>
-      )}
+      <RewardSummary reward={prize} />
       <Action disabled={busy} onClick={() => command({ type: 'advance' })}>
         {t('story.continue')}
       </Action>
@@ -82,20 +79,14 @@ const Trials = ({ hero, progress, node, command }) => {
           />
           {t(`nav.${node.type}`)}
         </h1>
-        {!cards && (
-          <p className={style.description}>{t(`rules.${node.type}`)}</p>
-        )}
-        {node.side && (
-          <p className={style.description}>
-            {t(
-              node.speaker
-                ? node.type === 'dice'
-                  ? 'chronicle.campDice'
-                  : 'challenge.campGame'
-                : `trials.camp.${hero.campaignId}`
-            )}
-          </p>
-        )}
+        <Disclosure
+          className={style.rules}
+          toggleClassName={style.ruleButton}
+          label={t('challenge.rulesLabel')}
+          panel={<p className={style.rulePanel}>{t(`rules.${node.type}`)}</p>}
+        >
+          <Info size={17} aria-hidden />
+        </Disclosure>
       </header>
       {cards ? (
         <Blackjack

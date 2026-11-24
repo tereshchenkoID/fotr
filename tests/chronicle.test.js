@@ -16,7 +16,7 @@ import {
   sceneFor,
   trialTurn,
 } from '../src/game/core/session.js'
-import { canTravel, getNode } from '../src/game/core/story.js'
+import { canTravel, getNode, storyLine } from '../src/game/core/story.js'
 import { createIndexedStorage } from '../src/services/indexed-storage.js'
 import { validateSave } from '../src/services/save-schema.js'
 
@@ -253,6 +253,29 @@ describe('Thorin’s chronicle', () => {
     expect(claimed.coins - save.coins).toBe(4)
     expect(applyCommand(claimed, claim)).toBe(claimed)
     expect(canTravel(hero, progress(advance(claimed)), 'erebor')).toBe(true)
+    save = claimed
+    for (const [place, enemy, line] of [
+      ['erebor', 'dragon', 'mountainKeyReady'],
+      ['five', 'azog', 'afterSmaug'],
+    ]) {
+      save = act(advance(save), 'travel', { location: place })
+      expect(storyLine(node(save), progress(save))).toBe(line)
+      save = finishDialogue(save)
+      expect(node(save)).toMatchObject({ type: 'battle', enemy, boss: true })
+      for (let i = 0; i < 16 && !progress(save).event.result; i++) {
+        const { turn } = progress(save).event
+        save = act(save, 'play', { action: 'spin', turn }, () => 0)
+        if (progress(save).event.cinematic)
+          save = act(save, 'play', { action: 'dismiss', turn: turn + 1 })
+      }
+      expect(progress(save).event.result).toBe('win')
+      save = advance(save)
+      expect(progress(save).flags[`defeated-${enemy}`]).toBe(1)
+      save = advance(save)
+      expect(validateSave(save)).toEqual(save)
+    }
+    expect(storyLine(node(save), progress(save))).toBe('thorinPeace')
+    expect(progress(save).completed).toEqual(hero.route)
   })
 
   it.each([
@@ -280,8 +303,8 @@ describe('Thorin’s chronicle', () => {
   it('localizes every authored scene and action in all three languages', () => {
     for (const locale of [en, ru, uk]) {
       for (const scene of Object.values(stories.thorin)) {
-        if (scene.line)
-          expect(locale.chronicle.lines[scene.line]).toMatchObject({
+        for (const line of [scene.line, ...(scene.lineVariants || []).map((variant) => variant.line)].filter(Boolean))
+          expect(locale.chronicle.lines[line]).toMatchObject({
             title: expect.any(String),
             text: expect.any(String),
           })

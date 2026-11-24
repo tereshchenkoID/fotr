@@ -1,22 +1,7 @@
-import {
-  useEffect, useEffectEvent, useId, useState
-} from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
-import {
-  ArrowLeft,
-  BookOpen,
-  ChevronRight,
-  Coins,
-  Dices,
-  Flame,
-  Footprints,
-  Gem,
-  Layers,
-  ScrollText,
-  Shield,
-  Swords,
-} from 'lucide-react'
+import { ArrowLeft, Shield } from 'lucide-react'
 
 import { useGame } from '@/store/game'
 import { heroes } from '@/game/content/heroes'
@@ -24,28 +9,17 @@ import { items } from '@/game/content/items'
 import { resolveLocationVisuals } from '@/game/content/visual-themes'
 import { locations } from '@/game/content/world'
 import { heroStats } from '@/game/core/battle'
-import { automaticGame, canChoose, chapterReward } from '@/game/core/story'
+import { automaticGame, chapterReward, storyLine } from '@/game/core/story'
 import { campGames, campPrize } from '@/game/core/trials'
 
 import Action from '@/components/Action'
 import Meter from '@/components/Meter'
+import RewardSummary from '@/components/RewardSummary'
 import ArtifactArt from '@/modules/Journal/ArtifactArt'
 
 import ChallengeSelection from './ChallengeSelection'
 
 import style from './index.module.scss'
-
-const icons = {
-  battle: Swords,
-  blackjack: Layers,
-  dice: Dices,
-  coin: Coins,
-  negotiate: ScrollText,
-  corrupt: Flame,
-  useArtifact: Gem,
-  distract: Flame,
-  sneak: Footprints,
-}
 
 const Dialogue = ({ speaker, text, animate = true }) => {
   const t = useTranslations()
@@ -86,68 +60,14 @@ const Dialogue = ({ speaker, text, animate = true }) => {
 
 const Choices = ({ node, progress, busy, command }) => {
   const t = useTranslations()
-  const descriptionId = useId()
-  const games = node.actions.filter(
-    (action) => action.game && canChoose(action, progress)
-  )
-  const alternatives = node.actions.filter((action) => !action.game)
-  const decisions =
-    games.length === 1 ? [...games, ...alternatives] : alternatives
-  const select = (action) => command({ type: 'choose', action })
-
   return (
     <>
-      {games.length > 1 && (
-        <ChallengeSelection options={games} busy={busy} onSelect={select} />
-      )}
-      {decisions.length > 0 && (
-        <ul className={style.choices} aria-label={t('story.choice')}>
-          {decisions.map((action) => {
-            const Icon = icons[action.id] || ScrollText
-            const available = canChoose(action, progress)
-            const label = t(
-              action.title
-                ? `chronicle.actions.${action.title}.name`
-                : `choice.${action.id}`
-            )
-            const detail = available
-              ? action.title
-                ? `chronicle.actions.${action.title}.effect`
-                : `story.choiceEffect.${action.id}`
-              : `requirements.${action.id}`
-            const id = `${descriptionId}-${action.id}`
-            return (
-              <li className={style.choice} key={action.id}>
-                <Action
-                  className={style.choiceButton}
-                  variant="secondary"
-                  data-primary={!!action.game}
-                  data-locked={!available}
-                  disabled={!available || busy}
-                  aria-label={label}
-                  aria-describedby={id}
-                  onClick={() => select(action.id)}
-                >
-                  <span className={style.choiceIcon} aria-hidden>
-                    <Icon size={19} />
-                  </span>
-                  <span className={style.choiceName}>{label}</span>
-                  <span className={style.requirement} id={id}>
-                    {t(detail)}
-                  </span>
-                  {available && (
-                    <ChevronRight
-                      className={style.choiceArrow}
-                      size={16}
-                      aria-hidden
-                    />
-                  )}
-                </Action>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <ChallengeSelection
+        options={node.actions}
+        progress={progress}
+        busy={busy}
+        onSelect={(action) => command({ type: 'choose', action })}
+      />
       <div className={style.choiceFooter}>
         {progress.checkpoint === node.id && (
           <p className={style.checkpoint}>
@@ -167,11 +87,11 @@ const Choices = ({ node, progress, busy, command }) => {
 const Rewards = ({ hero, progress, node, busy, advance }) => {
   const t = useTranslations()
   const reward = chapterReward(node, progress)
-  const item = items[reward.item]
+  const item = items[reward?.item]
   const stats = heroStats(hero, progress)
   const levels =
-    1 + Math.floor((progress.xp + reward.xp) / hero.progression.xpStep)
-  const equipped = progress.equipped.includes(reward.item)
+    1 + Math.floor((progress.xp + (reward?.xp || 0)) / hero.progression.xpStep)
+  const equipped = progress.equipped.includes(reward?.item)
   const canEquip = item && !equipped && progress.equipped.length < 2
   const equippedStats =
     canEquip &&
@@ -183,21 +103,13 @@ const Rewards = ({ hero, progress, node, busy, advance }) => {
 
   return (
     <>
-      <ul className={style.loot}>
-        <li className={style.currency}>
-          <Coins size={18} aria-hidden />
-          {t('story.coins', { value: reward.coins })}
-        </li>
-        <li className={style.currency}>
-          <BookOpen size={18} aria-hidden />
-          {t('story.xp', { value: reward.xp })}
-        </li>
+      <RewardSummary reward={reward && { ...reward, item: null }}>
         {levels > progress.level && (
           <li className={style.level}>
             {t('story.levelReward', { value: levels })}
           </li>
         )}
-      </ul>
+      </RewardSummary>
       {item && (
         <section className={style.artifact} data-rarity={item.rarity}>
           <ArtifactArt id={item.id} className={style.artifactImage} />
@@ -220,7 +132,7 @@ const Rewards = ({ hero, progress, node, busy, advance }) => {
       )}
       <div className={style.actions}>
         <Action disabled={busy} onClick={() => advance()}>
-          {t('story.claim')}
+          {t(reward ? 'story.claim' : 'story.continue')}
         </Action>
         {canEquip && (
           <Action
@@ -246,6 +158,7 @@ const Camp = ({ hero, progress, node, busy, command, advance }) => {
   const stats = heroStats(hero, progress)
   const games = progress.side ? [] : campGames(node)
   const [choosing, setChoosing] = useState(false)
+  const line = storyLine(node, progress)
   const play = (action) => command({ type: 'side', action })
 
   return (
@@ -261,14 +174,14 @@ const Camp = ({ hero, progress, node, busy, command, advance }) => {
           {t('game.resumeLevel', { level: progress.level })}
         </p>
       </div>
-      {node.line && (
+      {line && (
         <details className={style.talk}>
           <summary className={style.talkToggle}>
             {t('story.talk', { name: t(heroes[node.speaker].nameKey) })}
           </summary>
           <Dialogue
             speaker={heroes[node.speaker]}
-            text={t(`chronicle.lines.${node.line}.text`)}
+            text={t(`chronicle.lines.${line}.text`)}
             animate={false}
           />
         </details>
@@ -289,16 +202,7 @@ const Camp = ({ hero, progress, node, busy, command, advance }) => {
         <Action variant="secondary" href="/play/inventory">
           {t('nav.inventory')}
         </Action>
-        {games.length === 1 && (
-          <Action
-            variant="secondary"
-            disabled={busy}
-            onClick={() => play(games[0])}
-          >
-            {t(`story.campTrial.${games[0]}`)}
-          </Action>
-        )}
-        {games.length > 1 && (
+        {games.length > 0 && (
           <Action
             variant="secondary"
             aria-expanded={choosing}
@@ -308,13 +212,14 @@ const Camp = ({ hero, progress, node, busy, command, advance }) => {
           </Action>
         )}
       </div>
-      {choosing && games.length > 1 && (
+      {choosing && games.length > 0 && (
         <ChallengeSelection
           options={games.map((game) => ({
             id: game,
             game,
             trialRewards: { win: campPrize(game) },
           }))}
+          progress={progress}
           busy={busy}
           onSelect={play}
           camp
@@ -340,8 +245,9 @@ const Story = ({ hero, progress, node, command }) => {
 
   const scene = resolveLocationVisuals(hero.campaignId, node.location, node)
   const place = locations[node.location].names[locale]
-  const title = node.line
-    ? t(`chronicle.lines.${node.line}.title`)
+  const lineKey = storyLine(node, progress)
+  const title = lineKey
+    ? t(`chronicle.lines.${lineKey}.title`)
     : node.title
       ? t(`chronicle.titles.${node.title}.${node.type}`)
       : t(`story.${node.type}`)
@@ -357,12 +263,12 @@ const Story = ({ hero, progress, node, command }) => {
     stage !== 'mission' ||
     progress.chapter === 1 ||
     progress.chapter === Math.ceil(hero.route.length / 2)
-  const line = node.line && t(`chronicle.lines.${node.line}.text`)
+  const line = lineKey && t(`chronicle.lines.${lineKey}.text`)
   const description =
     node.type === 'dialogue'
       ? null
       : final
-        ? t(`heroes.${hero.id}.ending`)
+        ? line || t(`heroes.${hero.id}.ending`)
         : node.type === 'camp'
           ? t(node.autoRest ? 'story.restedCamp' : 'story.campText')
           : line || t(`story.${node.boss ? 'boss' : node.type}Text`)

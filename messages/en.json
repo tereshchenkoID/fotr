@@ -232,7 +232,7 @@
     "mainwin": "The challenge is won. Collect your reward and continue.",
     "mainloss": "You can continue the journey with a smaller coin reward.",
     "maindraw": "Your opponent offers safe passage.",
-    "sidewin": "You earned 18 coins, 25 XP and a Watch Seal.",
+    "sidewin": "You won the camp challenge.",
     "sideloss": "The camp trial ends here. Your main journey can continue.",
     "sidedraw": "The trial ends in a draw. Return to camp.",
     "camp": {
@@ -748,6 +748,23 @@
         "choice": "Bargain at the quay",
         "reward": "The harbor bargain",
         "camp": "Lake-town camp"
+      },
+      "goblins": {
+        "dialogue": "The bridges below",
+        "choice": "The guarded ladder"
+      },
+      "mirkwood": {
+        "dialogue": "Silk across the path",
+        "choice": "The broodmother"
+      },
+      "erebor": {
+        "dialogue": "At the Mountain",
+        "choice": "The dragon under the Mountain"
+      },
+      "five": {
+        "dialogue": "The northern horn",
+        "choice": "Face Azog",
+        "camp": "At the Mountain gate"
       }
     },
     "lines": {
@@ -802,6 +819,82 @@
       "rivendellRest": {
         "title": "Before departure",
         "text": "Eat and sleep while the roads are quiet. I’ve asked my scouts to bring word of the pass before you set out."
+      },
+      "trollHiddenDawn": {
+        "title": "Dawn beyond the rocks",
+        "text": "The Waystone led you around their fire. Now that the sun has turned the trolls to stone, we can search the cave."
+      },
+      "trollStalledDawn": {
+        "title": "The last argument",
+        "text": "Bilbo kept them arguing until sunrise. Look under the ledge before we leave. They must have hidden their plunder nearby."
+      },
+      "goblinBridges": {
+        "title": "The bridges below",
+        "text": "The captain holds the ladder out of these caverns. If he won’t let us pass, we can win a guide at the guard post or take the ladder ourselves."
+      },
+      "balinBelow": {
+        "title": "A way through",
+        "text": "You listened to me in Rivendell. Listen now. We need a way out, and the captain’s guards might wager the way to the ladder."
+      },
+      "goblinExit": {
+        "title": "Daylight at the far ledge",
+        "text": "The company crosses the last bridge. In the light above the ladder, Thorin checks the Mountain Key."
+      },
+      "countCompany": {
+        "title": "Names at the ledge",
+        "text": "Give me a name for every pack. Then we’ll move before the guards miss their ladder."
+      },
+      "spiderTrail": {
+        "title": "Silk across the path",
+        "text": "The web runs across every trail, and the broodmother is between us and the river. Keep Bilbo close. We’ll cut through together."
+      },
+      "spiderEscape": {
+        "title": "The broken web",
+        "text": "The broodmother falls. The company frees the trapped packs and cuts a path toward the river."
+      },
+      "mirkwoodCamp": {
+        "title": "The sound of water",
+        "text": "I can hear the river again. The current should carry us to the lake before the forest closes in."
+      },
+      "lakeLanding": {
+        "title": "The trader’s terms",
+        "text": "The trader knows which boat can take us to the far shore. Win a game with him or call in a favour. Either way, we need passage before dawn."
+      },
+      "lakeWatch": {
+        "title": "Before the crossing",
+        "text": "Take what we can carry. The Mountain is close, and the people here have already given more than I had any right to ask."
+      },
+      "mountainGate": {
+        "title": "At the Mountain",
+        "text": "The stone is warm. Smaug is still inside. Once the company finds the way in, I’ll lead the fight."
+      },
+      "mountainKeyReady": {
+        "title": "The key turns",
+        "text": "The moon-letters brought us to this door, and the key from the caverns fits. Stay close. Smaug is still inside."
+      },
+      "dragonFallen": {
+        "title": "After the dragon",
+        "text": "Smaug has fallen. The company can enter the halls and count what the dragon left behind."
+      },
+      "ereborBanners": {
+        "title": "Banners in the valley",
+        "text": "There are people from the lake at the gates. Hear them before you count another chest. And keep a watch to the north."
+      },
+      "azogApproach": {
+        "title": "The northern horn",
+        "text": "Azog’s host is coming down from the north. Open the gates for the wounded and send word to the banners in the valley."
+      },
+      "afterSmaug": {
+        "title": "The war at the gate",
+        "text": "Smaug is dead, and a new horn sounds from the north. Azog is coming. Send word to the others. We hold the gate together."
+      },
+      "azogFallen": {
+        "title": "The field falls quiet",
+        "text": "Azog has fallen. The company calls the wounded back from the field and opens the Mountain’s gates."
+      },
+      "thorinPeace": {
+        "title": "The restored hall",
+        "text": "Thorin receives the survivors in the hall. The people of Lake-town have a place at his table and a share for rebuilding their homes."
       }
     },
     "actions": {
@@ -815,7 +908,7 @@
       },
       "sneak": {
         "name": "Slip past the fire",
-        "effect": "Follow the trail with the Waystone equipped. Recover an extra 4 coins from a side pocket of the cave."
+        "effect": "Follow the trail with the Waystone equipped to find a hidden cache."
       },
       "showMap": {
         "name": "Show Elrond the map",
@@ -823,7 +916,7 @@
       },
       "askBalin": {
         "name": "Speak to Balin first",
-        "effect": "Ask Balin how to approach Elrond. Gain 5 XP and unlock an extra conversation."
+        "effect": "Ask Balin how to approach Elrond and unlock an extra conversation."
       },
       "blackjack": {
         "name": "Play the quay trader",
@@ -859,7 +952,7 @@
     "matched": "{face}. You earn the point.",
     "missed": "{face}. Your opponent earns the point.",
     "history": "Toss history",
-    "entry": "Round {round} · Called {guess} · Landed {face}"
+    "entry": "{round} · Called {guess} → {face}"
   },
   "challenge": {
     "choose": "Choose a challenge",
@@ -879,6 +972,7 @@
       "blackjack": "Beat the dealer’s hand without going over 21.",
       "dice": "Roll five dice per round. The higher total after three rounds wins.",
       "coin": "Call each toss. A correct call earns you a point; the first to two wins."
-    }
+    },
+    "rulesLabel": "Game rules"
   }
 }

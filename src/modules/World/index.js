@@ -61,7 +61,7 @@ const World = ({ hero, progress, node, command }) => {
   const targetChapter = hero.route.indexOf(target.id)
   const arrival = stories[hero.id][`${chapterKey(hero, targetChapter)}.dialogue`]
   const preview = resolveLocationVisuals(hero.campaignId, target.id, currentScene(target, progress, node))
-  const description = t(arrival?.title ? `chronicle.landmarks.${arrival.title}` : `landmarks.${target.id}`)
+  const description = t(arrival?.title && t.has(`chronicle.landmarks.${arrival.title}`) ? `chronicle.landmarks.${arrival.title}` : `landmarks.${target.id}`)
   const canEnter = canTravel(hero, progress, target.id)
   const current = target.id === progress.location
   const bossAt = (id) => stories[hero.id][`${chapterKey(hero, hero.route.indexOf(id))}.choice`]?.boss
@@ -83,7 +83,7 @@ const World = ({ hero, progress, node, command }) => {
   }, [target.x, target.y, zoom])
 
   const status = (id) => {
-    if (id === progress.location) return 'here'
+    if (id === progress.location && node.type !== 'end') return 'here'
     if (canTravel(hero, progress, id)) return 'open'
     if (progress.completed.includes(id)) return 'visited'
     return 'locked'
@@ -245,7 +245,7 @@ const World = ({ hero, progress, node, command }) => {
             <ul className={style.objectives}>
               <li className={style.objective}>
                 <BookOpen size={16} aria-hidden />
-                {current && node.title ? t(`chronicle.titles.${node.title}.dialogue`) : t('story.chapter', { chapter: hero.route.indexOf(target.id) + 1 })}
+                {t('story.chapter', { chapter: hero.route.indexOf(target.id) + 1 })}
               </li>
               {boss && (
                 <li className={style.objective}>

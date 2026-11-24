@@ -1,12 +1,11 @@
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import {
-  Coins, FastForward, Gem, Sparkles
-} from 'lucide-react'
+import { FastForward } from 'lucide-react'
 
 import { symbolFallback } from '@/game/content/visual-themes'
 
 import Action from '@/components/Action'
+import RewardSummary from '@/components/RewardSummary'
 
 import CombatEffect from '../CombatEffect'
 
@@ -18,7 +17,10 @@ const JackpotCinematicController = ({
   scene,
   phase,
   enemy,
+  enemyName,
   reward,
+  disabled,
+  onContinue,
   feedback,
   changes,
   onSkip,
@@ -26,7 +28,7 @@ const JackpotCinematicController = ({
   const t = useTranslations()
   const victory = phase === 'victory'
   const impact = phase === 'impact' || phase === 'recovery'
-  const exitLabel = t(victory ? 'story.continue' : 'battle.skip')
+  const exitLabel = t('battle.skip')
   const headline = victory ? t('results.win') : t(`heroes.${hero.id}.jackpot`)
   const relic = visuals.symbols[scene.relic]?.image || symbolFallback
   const figures = ['attack', 'blocked', 'healing', 'shield', 'focus'].filter(
@@ -113,26 +115,19 @@ const JackpotCinematicController = ({
               ))}
           </ul>
         )}
-        {victory && reward && (
-          <ul className={style.chips}>
-            <li>
-              <Coins size={15} />
-              {t('story.coins', { value: reward.coins })}
-            </li>
-            <li>
-              <Sparkles size={15} />
-              {t('story.xp', { value: reward.xp })}
-            </li>
-            {reward.item && (
-              <li>
-                <Gem size={15} />
-                {t(`items.${reward.item}.name`)}
-              </li>
-            )}
-          </ul>
+        {victory && (
+          <>
+            <p className={style.bossName}>{enemyName}</p>
+            <div className={style.victoryActions}>
+              <RewardSummary reward={reward} />
+              <Action disabled={disabled} onClick={onContinue}>
+                {t('battle.spoils')}
+              </Action>
+            </div>
+          </>
         )}
       </div>
-      <Action
+      {!victory && <Action
         variant="secondary"
         className={style.skip}
         onClick={onSkip}
@@ -141,7 +136,7 @@ const JackpotCinematicController = ({
       >
         <FastForward size={17} aria-hidden />
         <span className={style.skipLabel}>{exitLabel}</span>
-      </Action>
+      </Action>}
     </section>
   )
 }

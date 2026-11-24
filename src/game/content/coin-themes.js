@@ -1,50 +1,17 @@
-const face = (hero, symbol) => `/art/symbols/${hero}/${symbol}.webp`
-
-const coin = (metal, heads, tails, rim) => ({ metal, heads, tails, rim })
+const coin = (region, [light, shade]) => ({
+  edge: [light, shade],
+  heads: `/art/coins/${region}/heads.webp`,
+  tails: `/art/coins/${region}/tails.webp`,
+})
 
 export const coinThemes = {
-  erebor: coin(
-    ['#ffe1a1', '#a77532', '#442a17'],
-    face('thorin', 'shield'),
-    face('thorin', 'hammer'),
-    'angular'
-  ),
-  shire: coin(
-    ['#e0bb87', '#8f5e36', '#442719'],
-    face('bilbo', 'charm'),
-    face('bilbo', 'key'),
-    'plain'
-  ),
-  gondor: coin(
-    ['#e8f4f6', '#859ba3', '#354852'],
-    face('aragorn', 'banner'),
-    face('aragorn', 'crown'),
-    'beaded'
-  ),
-  elven: coin(
-    ['#e5f3d0', '#7e9f77', '#293e34'],
-    face('elrond', 'wreath'),
-    face('elrond', 'seal'),
-    'beaded'
-  ),
-  mordor: coin(
-    ['#b4a19d', '#51464d', '#201b23'],
-    face('sauron', 'eye'),
-    face('sauron', 'darkRune'),
-    'angular'
-  ),
-  numenor: coin(
-    ['#f5dea3', '#a28a59', '#4b4636'],
-    face('galadriel', 'shell'),
-    face('aragorn', 'crown'),
-    'beaded'
-  ),
-  fallback: coin(
-    ['#f7d498', '#9c7745', '#3c291e'],
-    face('aragorn', 'star'),
-    face('gimli', 'stone'),
-    'plain'
-  ),
+  erebor: coin('erebor', ['#d8a450', '#4b2d18']),
+  shire: coin('shire', ['#be8854', '#452719']),
+  gondor: coin('gondor', ['#c0d1d7', '#354852']),
+  elven: coin('elven', ['#c1d7b5', '#293e34']),
+  mordor: coin('mordor', ['#8d747b', '#201b23']),
+  numenor: coin('numenor', ['#d8bb6d', '#4b4636']),
+  fallback: coin('fallback', ['#c1a279', '#3c291e']),
 }
 
 const regionalCoins = {

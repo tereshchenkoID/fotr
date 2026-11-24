@@ -13,6 +13,17 @@ const tossTime = 1060
 const getTossDuration = () => tossTime
 const angle = (face) => (face === 'tails' ? 180 : 0)
 
+const CoinScore = ({ name, points, won }) => (
+  <div className={style.player} data-winner={!!won}>
+    <p>{name}</p>
+    <strong className={style.points}>{points}</strong>
+    <span className={style.pips} aria-hidden>
+      <span className={style.pip} data-filled={points > 0} />
+      <span className={style.pip} data-filled={points > 1} />
+    </span>
+  </div>
+)
+
 const Coin = ({ event, play, busy, heroName, opponent, theme, result }) => {
   const t = useTranslations('coin')
   const turn = event.rounds.length
@@ -22,34 +33,22 @@ const Coin = ({ event, play, busy, heroName, opponent, theme, result }) => {
   const landing = event.rounds.at(-1)?.face
   const scores = coinScore(shown.rounds)
   const outcome = shown.result
-  const [light, metal, shade] = theme.metal
+  const [light, shade] = theme.edge
 
   return (
     <>
       <div className={style.board} data-outcome={outcome || undefined}>
-        <div className={style.score} aria-label={t('score', scores)}>
-          <p className={style.player}>
-            {heroName}
-            <strong className={style.points}>{scores.player}</strong>
-          </p>
-          <p className={style.round}>
-            {t('round', {
-              value: outcome ? turn : shown.rounds.length + 1,
-              total: coinRounds,
-            })}
-          </p>
-          <p className={style.player}>
-            {opponent}
-            <strong className={style.points}>{scores.opponent}</strong>
-          </p>
-        </div>
+        <p className={style.round}>
+          {t('round', { value: outcome ? turn : shown.rounds.length + 1, total: coinRounds })}
+        </p>
+        <div className={style.score} role="group" aria-label={t('score', scores)}>
+          <CoinScore name={heroName} points={scores.player} won={previous && previous.guess === previous.face} />
         <div
           className={style.stage}
           data-rolling={!!before}
           aria-hidden
           style={{
             '--coin-light': light,
-            '--coin-metal': metal,
             '--coin-shade': shade,
             '--coin-time': `${tossTime}ms`,
             '--coin-start': `${angle(previous?.face)}deg`,
@@ -59,21 +58,24 @@ const Coin = ({ event, play, busy, heroName, opponent, theme, result }) => {
         >
           <div className={style.shadow} key={`shadow-${turn}`} />
           <div className={style.flight} key={turn}>
-            <div className={style.disc} data-rim={theme.rim}>
+            <div className={style.disc}>
               <span className={style.edge} />
               {coinSides.map((side) => (
                 <span className={style.face} data-side={side} key={side}>
                   <Image
                     src={theme[side]}
                     className={style.relief}
-                    width={128}
-                    height={128}
+                    width={384}
+                    height={384}
+                    sizes="112px"
                     alt=""
                   />
                 </span>
               ))}
             </div>
           </div>
+        </div>
+          <CoinScore name={opponent} points={scores.opponent} won={previous && previous.guess !== previous.face} />
         </div>
         <p className={style.call} role="status">
           {before

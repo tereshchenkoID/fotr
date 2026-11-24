@@ -15,6 +15,7 @@ import {
   trialTurn,
 } from '../src/game/core/session.js'
 import { chapterReward, getNode } from '../src/game/core/story.js'
+import { nextReward, trialOutcome } from '../src/game/core/trials.js'
 import { coinScore, playCoin, startCoin } from '../src/game/minigames/coin.js'
 import { shouldAnimateTurn } from '../src/hooks/useTurnAnimation.js'
 import { createIndexedStorage } from '../src/services/indexed-storage.js'
@@ -246,6 +247,78 @@ describe('Challenge selection and storage', () => {
     expect(act(save, 'side', { action: 'blackjack' })).toBe(save)
     expect(validateSave(save)).toEqual(save)
     expect(stories.thorin['thorin-3.dice']).toBeDefined()
+  })
+
+  it.each([
+    ['battle', 'erebor', false, 28],
+    ['blackjack', 'lake', false, 12],
+    ['dice', 'lake', false, 12],
+    ['coin', 'lake', false, 8],
+    ['blackjack', 'trollshaws', true, 18],
+    ['dice', 'trollshaws', true, 18],
+    ['coin', 'trollshaws', true, 12],
+  ])('matches the %s preview to the saved award in %s (camp=%s)', async (game, place, side, coins) => {
+    let save = act(fixture(place, side ? 'camp' : 'choice'), side ? 'side' : 'choose', { action: game })
+    const play = (action, random) => {
+      const current = event(save)
+      save = act(save, 'play', { action, turn: game === 'battle' ? current.turn : trialTurn(game, current) }, random)
+    }
+    if (game === 'battle') {
+      event(save).enemyHp = 1
+      play('spin', () => 0)
+      if (event(save).cinematic) play('dismiss')
+    }
+    if (game === 'blackjack') {
+      // A complete deck with a valid standing player hand of 20 and dealer hand of 18.
+      const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+      const deck = ['♠', '♥', '♣', '♦'].flatMap((suit) => ranks.map((rank) => ({ rank, suit })))
+      const take = (rank) => deck.splice(deck.findIndex((card) => card.rank === rank), 1)[0]
+      Object.assign(event(save), { player: [take('10'), take('K')], dealer: [take('9'), take('9')], deck })
+      play('stand')
+    }
+    if (game === 'dice') {
+      for (let round = 0; round < 3; round++) {
+        if (round) play('next')
+        let draw = 0
+        play('roll', () => draw++ < 5 ? 0.95 : 0)
+      }
+    }
+    if (game === 'coin') {
+      play('heads', () => 0)
+      play('tails', () => 0.95)
+    }
+    expect(event(save).result).toBe('win')
+    const db = new IDBFactory()
+    const store = createIndexedStorage(db)
+    await store.replace(save)
+    const restored = createIndexedStorage(db)
+    save = validateSave(await restored.load())
+    const reward = trialOutcome(node(save), event(save), nextReward(stories.thorin, node(save)), progress(save)).reward
+    expect(reward.coins).toBe(coins)
+    const before = save
+    const finish = command(save, 'advance')
+    const finished = applyCommand(save, finish)
+    expect(applyCommand(finished, finish)).toBe(finished)
+    if (!side) expect(chapterReward(node(finished), progress(finished))).toEqual(reward)
+    else expect(progress(finished).side.outcome.reward).toEqual(reward)
+    const granted = side ? finished : act(finished, 'advance')
+    expect(granted.coins - before.coins).toBe(reward.coins)
+    expect(progress(granted).xp - progress(before).xp).toBe(reward.xp)
+    if (reward.item) expect(progress(granted).inventory.filter((item) => item === reward.item)).toHaveLength(1)
+  })
+
+  it('resumes a legacy forest trial and still requires the broodmother', () => {
+    const old = fixture('mirkwood', 'dice')
+    progress(old).event = {
+      ready: false,
+      result: 'win',
+      rounds: Array.from({ length: 3 }, () => ({ player: Array(5).fill(6), opponent: Array(5).fill(1) })),
+    }
+    const checkpoint = act(validateSave(old), 'advance')
+    expect(node(checkpoint).type).toBe('checkpoint')
+    expect(progress(checkpoint).completed).not.toContain('mirkwood')
+    const battle = act(validateSave(checkpoint), 'advance')
+    expect(node(battle)).toMatchObject({ type: 'battle', enemy: 'spider' })
   })
 
   it('rejects an imported coin history that continues after 2–0', () => {

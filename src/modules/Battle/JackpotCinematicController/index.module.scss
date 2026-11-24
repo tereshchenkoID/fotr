@@ -14,6 +14,10 @@
 
   &[data-phase='victory'] {
     --scene-light: #d5834a;
+
+    position: relative;
+    min-block-size: clamp(17rem, 43vw, 30rem);
+    padding: clamp(0.85rem, 3.5vw, 2rem);
   }
 
   &[data-scene='volley'] {
@@ -216,6 +220,50 @@
     radial-gradient(ellipse at 60% 76%, #d56140b0, #140d17 68%);
 }
 
+.block[data-scene='webbed'] .atmosphere {
+  background:
+    repeating-conic-gradient(
+      from 45deg at 66% 35%,
+      transparent 0deg 23deg,
+      #b9cedb50 24deg 25deg
+    ),
+    repeating-radial-gradient(
+      circle at 66% 35%,
+      transparent 0 2rem,
+      #a2bacc66 2.02rem 2.1rem,
+      transparent 2.13rem 3rem
+    );
+  mask-image: radial-gradient(ellipse at 66% 35%, #000, transparent 73%);
+}
+
+.block[data-scene='iron'] .atmosphere {
+  background: radial-gradient(ellipse at 65% 50%, #d1b6a47d, transparent 68%);
+}
+
+.block[data-phase='victory'] .title {
+  font-size: clamp(1.65rem, 4vw, 2.9rem);
+}
+
+.bossName {
+  color: var(--text);
+}
+
+.victoryActions {
+  @include flex(
+    $align-items: center,
+    $justify-content: space-between,
+    $wrap: wrap
+  );
+
+  gap: 0.45rem 1rem;
+  margin-block-start: 0.35rem;
+  animation: scene-in 400ms 100ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @keyframes scene-in {
   from {
     opacity: 0;
@@ -378,10 +426,6 @@
   .description,
   .skipLabel {
     display: none;
-  }
-
-  .block[data-phase='victory'] .skipLabel {
-    display: inline;
   }
 
   .block .relic {

@@ -31,6 +31,10 @@ export const thorinChapters = {
       dawn: {
         type: 'dialogue',
         line: 'trollDawn',
+        lineVariants: [
+          { flag: 'trollSecret', line: 'trollHiddenDawn' },
+          { flag: 'trollDistraction', line: 'trollStalledDawn' },
+        ],
         speaker: 'gandalf',
         next: 'cache',
       },
@@ -101,9 +105,31 @@ export const thorinChapters = {
       },
     },
   },
+  goblins: {
+    title: 'goblins',
+    scenes: {
+      dialogue: {
+        line: 'goblinBridges',
+        speaker: 'balin',
+        lineVariants: [{ flag: 'trustBalin', line: 'balinBelow' }],
+      },
+      reward: { line: 'goblinExit' },
+      camp: { line: 'countCompany', speaker: 'dwalin' },
+    },
+  },
+  mirkwood: {
+    title: 'mirkwood',
+    scenes: {
+      dialogue: { line: 'spiderTrail', speaker: 'thorin' },
+      reward: { line: 'spiderEscape' },
+      camp: { line: 'mirkwoodCamp', speaker: 'bilbo' },
+    },
+  },
   lake: {
     title: 'lake',
     scenes: {
+      dialogue: { line: 'lakeLanding', speaker: 'balin' },
+      camp: { line: 'lakeWatch', speaker: 'thorin' },
       blackjack: { dealer: 'lakeTrader' },
       dice: { dealer: 'lakeTrader' },
       reward: { trialRewards: { coin: { win: { coins: 8 } } } },
@@ -123,6 +149,33 @@ export const thorinChapters = {
           }),
         ],
       },
+    },
+  },
+  erebor: {
+    title: 'erebor',
+    scenes: {
+      dialogue: {
+        line: 'mountainGate',
+        speaker: 'thorin',
+        lineVariants: [{ item: 'mountainKey', line: 'mountainKeyReady' }],
+      },
+      reward: { line: 'dragonFallen' },
+      camp: { line: 'ereborBanners', speaker: 'balin' },
+    },
+  },
+  five: {
+    title: 'five',
+    scenes: {
+      dialogue: {
+        line: 'azogApproach',
+        speaker: 'thorin',
+        lineVariants: [
+          { flag: 'defeated-dragon', line: 'afterSmaug' },
+          { completed: 'erebor', line: 'afterSmaug' },
+        ],
+      },
+      reward: { line: 'azogFallen' },
+      end: { line: 'thorinPeace' },
     },
   },
 }

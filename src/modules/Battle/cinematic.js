@@ -11,6 +11,7 @@ const heroScenes = {
 const bossScenes = {
   dragon: { style: 'embers', effect: 'ember' },
   balrog: { style: 'fracture', effect: 'blade' },
+  spider: { style: 'webbed', effect: 'stars' },
   azog: { style: 'iron', effect: 'stone' },
 }
 

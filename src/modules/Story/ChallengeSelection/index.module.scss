@@ -1,45 +1,88 @@
-.games {
+.choices {
   @include reset-list;
 
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: 0.55rem;
+  gap: 0.6rem;
+
+  @media (width >= 44rem) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  }
 }
 
-.game {
+.choice {
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  min-inline-size: 0;
+}
+
+.choice .choiceButton {
+  display: grid;
+  grid-template:
+    'icon name arrow' auto
+    'icon detail arrow' 1fr
+    / auto minmax(0, 1fr) 0.95rem;
   align-items: start;
-  gap: 0.3rem;
+  gap: 0.22rem 0.6rem;
   padding: 0.7rem;
-  border: 1px solid var(--line);
+  background: #10161dd4;
+  text-align: start;
+
+  &[data-primary='true'] {
+    border-color: var(--gold-dark);
+    background: linear-gradient(145deg, #2d261b, #16191f 80%);
+  }
+
+  &[data-locked='true'] {
+    background: #10151a81;
+    opacity: 1;
+    color: var(--muted);
+    border-style: dashed;
+  }
+
+  @media (width >= 44rem) {
+    grid-template:
+      'icon icon arrow' auto 'name name name' auto 'detail detail detail' 1fr / auto minmax(
+        0,
+        1fr
+      )
+      0.95rem;
+    align-content: start;
+  }
+}
+
+.choiceIcon {
+  display: grid;
+  grid-area: icon;
+  place-items: center;
+  inline-size: 2rem;
+  aspect-ratio: 1;
+  border: 1px solid #a7834f53;
   border-radius: var(--radius);
-  background: #10161d82;
-
-  .title {
-    @include flex($align-items: center);
-
-    gap: 0.35rem;
-    font-size: 1rem;
-    color: var(--gold-bright);
-  }
-
-  .start {
-    justify-self: start;
-    margin-block-start: 0.15rem;
-    min-block-size: 2.75rem;
-  }
+  background: #9d6d2521;
+  color: var(--gold-bright);
 }
 
-.icon {
-  flex: none;
-}
-
-.description,
-.stakes {
-  font-size: 0.82rem;
-}
-
-.stakes {
+.choiceButton[data-locked='true'] .choiceIcon {
+  border-color: var(--line);
+  background: transparent;
   color: var(--muted);
+}
+
+.choiceName {
+  grid-area: name;
+  font-size: 0.94rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.requirement {
+  grid-area: detail;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.choiceArrow {
+  grid-area: arrow;
+  align-self: center;
+  color: var(--gold);
 }

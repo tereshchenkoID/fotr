@@ -2,6 +2,8 @@ import { handValue } from '../minigames/blackjack.js'
 import { coinScore } from '../minigames/coin.js'
 import { duelTotals } from '../minigames/dice.js'
 
+import { unclaimedReward } from './rewards.js'
+
 export const gameTypes = ['battle', 'blackjack', 'dice', 'coin']
 export const sideTypes = gameTypes.filter((game) => game !== 'battle')
 
@@ -46,11 +48,17 @@ export const encounterPrize = (rewardNode, game, result) => ({
     : rewardNode.trialRewards?.[game]?.[result]),
 })
 
-export const trialOutcome = (node, event, rewardNode, checkpoint) => {
+export const nextReward = (graph, node) => {
+  let next = graph[node.next]
+  while (next?.type === 'dialogue') next = graph[next.next]
+  return next?.type === 'reward' ? next : null
+}
+
+export const trialOutcome = (node, event, rewardNode, progress) => {
   const result = event.result
   const retry = node.type === 'battle' && result === 'loss'
   const base = !retry && rewardNode?.reward
-  const reward = node.side
+  const prize = node.side
     ? result === 'win'
       ? campPrize(node.type)
       : null
@@ -60,8 +68,8 @@ export const trialOutcome = (node, event, rewardNode, checkpoint) => {
     game: node.type,
     result,
     stats: statistics[node.type](event),
-    reward: reward || null,
+    reward: unclaimedReward(progress, node.side ? 'side' : rewardNode?.id, prize),
     rewardNode: base ? rewardNode.id : null,
-    next: node.side ? null : retry ? checkpoint : node.next,
+    next: node.side ? null : retry ? progress.checkpoint : node.next,
   }
 }

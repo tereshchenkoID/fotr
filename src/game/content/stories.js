@@ -117,7 +117,7 @@ const addChapter = (graph, hero, location, chapter) => {
   add('choice', { actions, boss })
   // Keep old encounter IDs loadable even when a new choice no longer offers them.
   for (const type of majorBoss ? ['battle'] : legacyGames) {
-    add(type, { enemy, boss: boss && type === 'battle', next: reward, encounter: nodeId('choice') })
+    add(type, { enemy, boss: boss && type === 'battle', next: boss && type !== 'battle' ? nodeId('checkpoint') : reward, encounter: nodeId('choice') })
   }
   add('reward', {
     next: nodeId(final ? 'end' : 'camp'),
