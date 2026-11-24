@@ -2,7 +2,9 @@ import { heroes } from '../game/content/heroes.js'
 import { achievements, enemies, items } from '../game/content/items.js'
 import { stories } from '../game/content/stories.js'
 import { initialSave, saveVersion } from '../game/core/session.js'
+import { gameTypes, sideTypes } from '../game/core/trials.js'
 import { ranks, suits } from '../game/minigames/blackjack.js'
+import { coinResult, coinRounds, coinSides } from '../game/minigames/coin.js'
 import {
   diceCount, duelRounds, startDice, sumDice
 } from '../game/minigames/dice.js'
@@ -48,8 +50,29 @@ const validFeedback = (feedback) =>
     ['attack', 'damage', 'blocked', 'healing', 'focus', 'shield'].every((key) => integer(feedback[key]))
   )
 
+const validCoin = (event) =>
+  list(event.rounds, (round) =>
+    isObject(round) && coinSides.includes(round.guess) && coinSides.includes(round.face)
+  ) &&
+  event.rounds.length <= coinRounds &&
+  !coinResult(event.rounds.slice(0, -1)) &&
+  event.result === coinResult(event.rounds)
+
+const validOutcome = (outcome, graph) =>
+  outcome === undefined || (
+    isObject(outcome) &&
+    known(graph, outcome.eventId) &&
+    gameTypes.includes(outcome.game) &&
+    ['win', 'loss', 'draw'].includes(outcome.result) &&
+    isObject(outcome.stats) &&
+    Object.values(outcome.stats).every((value) => integer(value)) &&
+    (outcome.rewardNode === undefined || outcome.rewardNode === null ||
+      (known(graph, outcome.rewardNode) && graph[outcome.rewardNode].type === 'reward')) &&
+    (outcome.next === null || known(graph, outcome.next))
+  )
+
 const validEvent = (event, type, hero) => {
-  if (!['blackjack', 'dice', 'battle'].includes(type)) return event === null
+  if (!gameTypes.includes(type)) return event === null
   if (!isObject(event) || !validResult(event.result)) return false
   if (type === 'blackjack') {
     if (
@@ -68,6 +91,7 @@ const validEvent = (event, type, hero) => {
     )
   }
   if (type === 'dice') return validDuel(event)
+  if (type === 'coin') return validCoin(event)
   return (
     known(enemies, event.enemyId) &&
     validFeedback(event.feedback) &&
@@ -132,6 +156,7 @@ const validProgress = (progress, hero) => {
     integer(progress.xp) &&
     integer(progress.level, 1) &&
     validResult(progress.result) &&
+    validOutcome(progress.trialOutcome, graph) &&
     isObject(progress.flags) &&
     Object.values(progress.flags).every((flag) => integer(flag)) &&
     list(progress.claimed, (id) => typeof id === 'string') &&
@@ -148,7 +173,8 @@ const validProgress = (progress, hero) => {
     (progress.side === null ||
       (isObject(progress.side) &&
         typeof progress.side.active === 'boolean' &&
-        ['dice', 'blackjack'].includes(progress.side.type) &&
+        sideTypes.includes(progress.side.type) &&
+        validOutcome(progress.side.outcome, graph) &&
         validEvent(progress.side.game, progress.side.type, hero)))
   )
 }

@@ -1,5 +1,7 @@
 import { chapterKey, stories } from '../content/stories.js'
 
+import { encounterPrize } from './trials.js'
+
 export const getNode = (hero, progress) => {
   if (progress.side?.active) {
     return {
@@ -9,6 +11,7 @@ export const getNode = (hero, progress) => {
       chapter: progress.chapter,
       side: true,
       speaker: stories[hero.id][progress.node].speaker,
+      encounter: progress.node,
     }
   }
   return stories[hero.id][progress.node]
@@ -23,8 +26,17 @@ export const canChoose = (action, progress) =>
       : (progress.flags[key] || 0) >= value
   )
 
+export const automaticGame = (node, progress) => {
+  if (progress.result === 'loss' || !node.actions?.length) return null
+  const available = node.actions.filter((action) => canChoose(action, progress))
+  // A disabled narrative alternative may become available through equipment.
+  if (node.actions.some((action) => !action.game)) return null
+  return available.length === 1 ? available[0] : null
+}
+
 export const chapterReward = (node, progress) =>
-  progress.result === 'loss' ? { ...node.reward, coins: 4 } : node.reward
+  encounterPrize(node, progress.trialOutcome?.rewardNode === node.id
+    ? progress.trialOutcome.game : undefined, progress.result)
 
 export const canTravel = (hero, progress, location) =>
   !!location && hero.route[progress.chapter + 1] === location &&

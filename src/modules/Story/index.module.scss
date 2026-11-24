@@ -15,6 +15,10 @@
   &[data-stage='camp'] {
     --scene-glow: #be773d4a;
   }
+
+  &[data-stage='choice'] .banner {
+    min-block-size: clamp(8rem, 21vw, 14rem);
+  }
 }
 
 .banner {
@@ -139,28 +143,106 @@
 }
 
 .choices {
+  @include reset-list;
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  align-items: start;
-  gap: 0.55rem;
+  gap: 0.6rem;
+
+  @media (width >= 44rem) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  }
 }
 
 .choice {
   display: grid;
   min-inline-size: 0;
-  gap: 0.25rem;
+}
 
-  .choiceButton {
-    inline-size: 100%;
+.choice .choiceButton {
+  display: grid;
+  grid-template:
+    'icon name arrow' auto
+    'icon detail arrow' 1fr
+    / auto minmax(0, 1fr) 0.95rem;
+  align-items: start;
+  gap: 0.22rem 0.6rem;
+  padding: 0.7rem;
+  background: #10161dd4;
+  text-align: start;
+
+  &[data-primary='true'] {
+    border-color: var(--gold-dark);
+    background: linear-gradient(145deg, #2d261b, #16191f 80%);
   }
 
-  .requirement {
-    font-size: 0.78rem;
+  &[data-locked='true'] {
+    background: #10151a81;
+    opacity: 1;
+    color: var(--muted);
+    border-style: dashed;
+  }
+
+  @media (width >= 44rem) {
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: 'icon icon arrow' 'name name name' 'detail detail detail';
+    align-content: start;
   }
 }
 
-.icon {
-  flex: none;
+.choiceIcon {
+  display: grid;
+  grid-area: icon;
+  place-items: center;
+  inline-size: 2rem;
+  aspect-ratio: 1;
+  border: 1px solid #a7834f53;
+  border-radius: var(--radius);
+  background: #9d6d2521;
+  color: var(--gold-bright);
+}
+
+.choiceButton[data-locked='true'] .choiceIcon {
+  border-color: var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.choiceName {
+  grid-area: name;
+  font-size: 0.94rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.requirement {
+  grid-area: detail;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.choiceArrow {
+  grid-area: arrow;
+  align-self: center;
+  color: var(--gold);
+}
+
+.choiceFooter {
+  @include flex(
+    $justify-content: space-between,
+    $align-items: center,
+    $wrap: wrap
+  );
+
+  gap: 0.25rem 0.8rem;
+  padding-block-start: 0.3rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.choiceFooter .mapLink {
+  justify-content: flex-start;
+  padding-inline: 0.15rem;
+  font-size: 0.82rem;
 }
 
 .checkpoint,

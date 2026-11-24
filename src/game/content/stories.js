@@ -1,3 +1,5 @@
+import { gameTypes } from '../core/trials.js'
+
 import { heroes } from './heroes.js'
 import { thorinChapters } from './thorin-story.js'
 
@@ -36,7 +38,7 @@ const locationEnemy = {
   erebor: 'dragon',
 }
 
-const encounterTypes = ['battle', 'blackjack', 'dice']
+const legacyGames = gameTypes.filter((id) => id !== 'coin')
 const settlementTrials = {
   shire: ['dice', 'blackjack'],
   bree: ['dice', 'blackjack'],
@@ -64,13 +66,14 @@ const addChapter = (graph, hero, location, chapter) => {
   const nodeId = (type) => `${base}.${type}`
   const final = chapter === hero.route.length - 1
   const main = routeStyles[hero.id][chapter % 3]
-  const boss =
+  const majorBoss =
     final ||
     (hero.id === 'gandalf' && location === 'moria') ||
     (hero.id === 'thorin' && location === 'erebor')
+  const boss = majorBoss || location === 'mirkwood'
   const enemy = location === 'five'
     ? 'azog'
-    : boss ? hero.boss : locationEnemy[location] || 'scout'
+    : majorBoss ? hero.boss : locationEnemy[location] || 'scout'
   const add = (type, properties) => {
     const id = nodeId(type)
     graph[id] = { id, type, location, chapter, ...properties }
@@ -113,14 +116,14 @@ const addChapter = (graph, hero, location, chapter) => {
   }
   add('choice', { actions, boss })
   // Keep old encounter IDs loadable even when a new choice no longer offers them.
-  for (const type of boss ? paths : encounterTypes) {
-    add(type, { enemy, boss, next: reward })
+  for (const type of majorBoss ? ['battle'] : legacyGames) {
+    add(type, { enemy, boss: boss && type === 'battle', next: reward, encounter: nodeId('choice') })
   }
   add('reward', {
     next: nodeId(final ? 'end' : 'camp'),
     reward: {
-      coins: boss ? 28 : 12,
-      xp: boss ? 62 : 30,
+      coins: majorBoss ? 28 : 12,
+      xp: majorBoss ? 62 : 30,
       item: final
         ? 'crown'
         : [null, 'ember', campaignRelics[hero.campaignId]][chapter] || null,
@@ -164,6 +167,13 @@ const addChapter = (graph, hero, location, chapter) => {
     if (location === 'trollshaws') {
       for (const type of ['blackjack', 'dice']) graph[nodeId(type)].next = nodeId('dawn')
     }
+  }
+  for (const action of graph[nodeId('choice')].actions) {
+    const target = graph[action.next]
+    if (!gameTypes.includes(target.type)) continue
+    action.game = target.type
+    action.trialRewards = graph[target.next]?.trialRewards?.[target.type]
+    target.encounter = nodeId('choice')
   }
 }
 

@@ -11,6 +11,7 @@ import { useGame } from '@/store/game'
 import { heroes } from '@/game/content/heroes'
 import { sceneFor } from '@/game/core/session'
 import { getNode } from '@/game/core/story'
+import { gameTypes, sideTypes } from '@/game/core/trials'
 
 import Action from '@/components/Action'
 import Settings from '@/modules/Journal/Settings'
@@ -71,7 +72,7 @@ const ContextScene = ({ scene, save, send }) => {
   else if (scene === 'story' && expected !== 'story')
     redirect = `/play/${expected}`
   else if (
-    ['battle', 'blackjack', 'dice'].includes(scene) &&
+    gameTypes.includes(scene) &&
     scene !== expected
   )
     redirect = `/play/${expected}`
@@ -86,7 +87,7 @@ const ContextScene = ({ scene, save, send }) => {
   if (scene === 'story') return <Story {...props} />
   if (scene === 'battle')
     return <Battle key={`${hero.id}:${node.id}`} {...props} />
-  if (scene === 'blackjack' || scene === 'dice')
+  if (sideTypes.includes(scene))
     return <Trials key={`${hero.id}:${node.id}`} {...props} />
   return <Journal {...props} scene={scene} />
 }

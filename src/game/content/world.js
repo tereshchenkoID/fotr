@@ -83,3 +83,9 @@ const markerGroups = {
 export const locationMarkers = Object.fromEntries(
   Object.entries(markerGroups).flatMap(([type, ids]) => ids.map((id) => [id, type]))
 )
+
+export const mapLabelPositions = {
+  lake: 'upper-left',
+  erebor: 'upper-right',
+  five: 'lower-left',
+}

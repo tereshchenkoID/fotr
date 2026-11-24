@@ -1,0 +1,45 @@
+.games {
+  @include reset-list;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.55rem;
+}
+
+.game {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-items: start;
+  gap: 0.3rem;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #10161d82;
+
+  .title {
+    @include flex($align-items: center);
+
+    gap: 0.35rem;
+    font-size: 1rem;
+    color: var(--gold-bright);
+  }
+
+  .start {
+    justify-self: start;
+    margin-block-start: 0.15rem;
+    min-block-size: 2.75rem;
+  }
+}
+
+.icon {
+  flex: none;
+}
+
+.description,
+.stakes {
+  font-size: 0.82rem;
+}
+
+.stakes {
+  color: var(--muted);
+}

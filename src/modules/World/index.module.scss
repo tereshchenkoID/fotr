@@ -190,8 +190,21 @@
     z-index: 4;
   }
 
-  &[data-label-below='true'] .markerLabel {
+  &[data-label-position='below'] .markerLabel,
+  &[data-label-position='lower-left'] .markerLabel {
     inset-block: calc(100% + 0.18rem) auto;
+  }
+
+  &[data-label-position='upper-left'] .markerLabel {
+    inset-inline-end: 50%;
+  }
+
+  &[data-label-position='upper-right'] .markerLabel {
+    inset-inline-start: 50%;
+  }
+
+  &[data-label-position='lower-left'] .markerLabel {
+    inset-inline-end: 0;
   }
 
   @include hover {

@@ -1,8 +1,12 @@
-import { useEffect, useEffectEvent, useState } from 'react'
+import {
+  useEffect, useEffectEvent, useId, useState
+} from 'react'
 import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import {
+  ArrowLeft,
   BookOpen,
+  ChevronRight,
   Coins,
   Dices,
   Flame,
@@ -20,18 +24,22 @@ import { items } from '@/game/content/items'
 import { resolveLocationVisuals } from '@/game/content/visual-themes'
 import { locations } from '@/game/content/world'
 import { heroStats } from '@/game/core/battle'
-import { canChoose, chapterReward } from '@/game/core/story'
+import { automaticGame, canChoose, chapterReward } from '@/game/core/story'
+import { campGames, campPrize } from '@/game/core/trials'
 
 import Action from '@/components/Action'
 import Meter from '@/components/Meter'
 import ArtifactArt from '@/modules/Journal/ArtifactArt'
 
+import ChallengeSelection from './ChallengeSelection'
+
 import style from './index.module.scss'
 
 const icons = {
   battle: Swords,
-  dice: Dices,
   blackjack: Layers,
+  dice: Dices,
+  coin: Coins,
   negotiate: ScrollText,
   corrupt: Flame,
   useArtifact: Gem,
@@ -78,46 +86,81 @@ const Dialogue = ({ speaker, text, animate = true }) => {
 
 const Choices = ({ node, progress, busy, command }) => {
   const t = useTranslations()
+  const descriptionId = useId()
+  const games = node.actions.filter(
+    (action) => action.game && canChoose(action, progress)
+  )
+  const alternatives = node.actions.filter((action) => !action.game)
+  const decisions =
+    games.length === 1 ? [...games, ...alternatives] : alternatives
+  const select = (action) => command({ type: 'choose', action })
+
   return (
-    <div className={style.choices}>
-      {node.actions.map((action, index) => {
-        const Icon = icons[action.id] || ScrollText
-        const available = canChoose(action, progress)
-        return (
-          <div className={style.choice} key={action.id}>
-            <Action
-              className={style.choiceButton}
-              variant={index === 0 ? 'primary' : 'secondary'}
-              disabled={!available || busy}
-              onClick={() => command({ type: 'choose', action: action.id })}
-            >
-              <Icon className={style.icon} size={17} aria-hidden />
-              {t(
-                action.title
-                  ? `chronicle.actions.${action.title}.name`
-                  : `choice.${action.id}`
-              )}
-            </Action>
-            {!available ? (
-              <p className={style.requirement}>
-                {t(`requirements.${action.id}`)}
-              </p>
-            ) : (
-              <p className={style.requirement}>
-                {t(
-                  action.title
-                    ? `chronicle.actions.${action.title}.effect`
-                    : `story.choiceEffect.${action.id}`
-                )}
-              </p>
-            )}
-          </div>
-        )
-      })}
-      <Action href="/play/world" variant="ghost">
-        {t('choice.retreat')}
-      </Action>
-    </div>
+    <>
+      {games.length > 1 && (
+        <ChallengeSelection options={games} busy={busy} onSelect={select} />
+      )}
+      {decisions.length > 0 && (
+        <ul className={style.choices} aria-label={t('story.choice')}>
+          {decisions.map((action) => {
+            const Icon = icons[action.id] || ScrollText
+            const available = canChoose(action, progress)
+            const label = t(
+              action.title
+                ? `chronicle.actions.${action.title}.name`
+                : `choice.${action.id}`
+            )
+            const detail = available
+              ? action.title
+                ? `chronicle.actions.${action.title}.effect`
+                : `story.choiceEffect.${action.id}`
+              : `requirements.${action.id}`
+            const id = `${descriptionId}-${action.id}`
+            return (
+              <li className={style.choice} key={action.id}>
+                <Action
+                  className={style.choiceButton}
+                  variant="secondary"
+                  data-primary={!!action.game}
+                  data-locked={!available}
+                  disabled={!available || busy}
+                  aria-label={label}
+                  aria-describedby={id}
+                  onClick={() => select(action.id)}
+                >
+                  <span className={style.choiceIcon} aria-hidden>
+                    <Icon size={19} />
+                  </span>
+                  <span className={style.choiceName}>{label}</span>
+                  <span className={style.requirement} id={id}>
+                    {t(detail)}
+                  </span>
+                  {available && (
+                    <ChevronRight
+                      className={style.choiceArrow}
+                      size={16}
+                      aria-hidden
+                    />
+                  )}
+                </Action>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <div className={style.choiceFooter}>
+        {progress.checkpoint === node.id && (
+          <p className={style.checkpoint}>
+            <Shield size={15} aria-hidden />
+            {t('story.checkpointSaved')}
+          </p>
+        )}
+        <Action className={style.mapLink} href="/play/world" variant="ghost">
+          <ArrowLeft size={16} aria-hidden />
+          {t('choice.retreat')}
+        </Action>
+      </div>
+    </>
   )
 }
 
@@ -201,7 +244,9 @@ const Rewards = ({ hero, progress, node, busy, advance }) => {
 const Camp = ({ hero, progress, node, busy, command, advance }) => {
   const t = useTranslations()
   const stats = heroStats(hero, progress)
-  const trial = node.campTrial
+  const games = progress.side ? [] : campGames(node)
+  const [choosing, setChoosing] = useState(false)
+  const play = (action) => command({ type: 'side', action })
 
   return (
     <>
@@ -244,16 +289,37 @@ const Camp = ({ hero, progress, node, busy, command, advance }) => {
         <Action variant="secondary" href="/play/inventory">
           {t('nav.inventory')}
         </Action>
-        {trial && !progress.side && (
+        {games.length === 1 && (
           <Action
             variant="secondary"
             disabled={busy}
-            onClick={() => command({ type: 'side' })}
+            onClick={() => play(games[0])}
           >
-            {t(`story.campTrial.${trial}`)}
+            {t(`story.campTrial.${games[0]}`)}
+          </Action>
+        )}
+        {games.length > 1 && (
+          <Action
+            variant="secondary"
+            aria-expanded={choosing}
+            onClick={() => setChoosing(!choosing)}
+          >
+            {t('story.side')}
           </Action>
         )}
       </div>
+      {choosing && games.length > 1 && (
+        <ChallengeSelection
+          options={games.map((game) => ({
+            id: game,
+            game,
+            trialRewards: { win: campPrize(game) },
+          }))}
+          busy={busy}
+          onSelect={play}
+          camp
+        />
+      )}
     </>
   )
 }
@@ -263,10 +329,14 @@ const Story = ({ hero, progress, node, command }) => {
   const locale = useLocale()
   const busy = useGame((state) => state.busy)
   const advance = (equip) => command({ type: 'advance', equip })
-  const restoreCheckpoint = useEffectEvent(() => advance())
+  const automatic = automaticGame(node, progress)?.id
+  const enterSavedScene = useEffectEvent(() =>
+    automatic ? command({ type: 'choose', action: automatic }) : advance()
+  )
   useEffect(() => {
-    if (node.type === 'checkpoint' && !busy) void restoreCheckpoint()
-  }, [node.id, node.type, busy])
+    if (!busy && (node.type === 'checkpoint' || automatic))
+      void enterSavedScene()
+  }, [node.id, node.type, busy, automatic])
 
   const scene = resolveLocationVisuals(hero.campaignId, node.location, node)
   const place = locations[node.location].names[locale]
@@ -352,23 +422,17 @@ const Story = ({ hero, progress, node, command }) => {
             </div>
           </>
         ) : (
-          <p className={style.description}>{description}</p>
+          (node.type !== 'choice' || line || node.boss) && (
+            <p className={style.description}>{description}</p>
+          )
         )}
-        {node.type === 'choice' && (
-          <>
-            {progress.checkpoint === node.id && (
-              <p className={style.checkpoint}>
-                <Shield size={15} aria-hidden />
-                {t('story.checkpointSaved')}
-              </p>
-            )}
-            <Choices
-              node={node}
-              progress={progress}
-              busy={busy}
-              command={command}
-            />
-          </>
+        {node.type === 'choice' && !automatic && (
+          <Choices
+            node={node}
+            progress={progress}
+            busy={busy}
+            command={command}
+          />
         )}
         {node.type === 'reward' && (
           <Rewards

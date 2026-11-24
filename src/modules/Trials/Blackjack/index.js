@@ -76,7 +76,7 @@ const Hand = ({ event, before, dealer, dealerName, waitingReveal }) => {
   return (
     <section className={style.hand} data-dealer={dealer} data-tone={tone}>
       <h2 className={style.handTitle}>
-        {t(dealer ? `dealers.${dealerName}` : 'player')}
+        {dealer ? dealerName : t('player')}
         {shown[key].length > 0 && (
           <span className={style.score} aria-live="polite">
             {total}{tone && ` · ${t(tone)}`}
@@ -96,7 +96,7 @@ const Hand = ({ event, before, dealer, dealerName, waitingReveal }) => {
   )
 }
 
-const Blackjack = ({ event, play, busy, result, visuals, dealerName = visuals.table }) => {
+const Blackjack = ({ event, play, busy, result, visuals, dealerName, dealerKey = visuals.table }) => {
   const t = useTranslations('trials')
   const started = event.player.length > 0
   const turn = trialTurn('blackjack', event)
@@ -121,10 +121,10 @@ const Blackjack = ({ event, play, busy, result, visuals, dealerName = visuals.ta
   return (
     <>
       <div ref={table} className={style.block} aria-busy={dealing} data-card-back={visuals.theme.material}>
-        <Hand event={event} before={before} dealer dealerName={dealerName} waitingReveal={waitingReveal} />
+        <Hand event={event} before={before} dealer dealerName={dealerName || t(`dealers.${dealerKey}`)} waitingReveal={waitingReveal} />
         <div className={style.divider}>
           <span className={style.deck} ref={deck} aria-hidden><Orbit size={22} strokeWidth={1.35} /></span>
-          <div className={style.verdict}><TrialOutcome outcome={outcome} inline /></div>
+          <div className={style.verdict}><TrialOutcome outcome={outcome} /></div>
         </div>
         <Hand event={event} before={before} />
       </div>

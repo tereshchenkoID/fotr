@@ -1,4 +1,5 @@
 import { art, locationArt } from './assets.js'
+import { resolveCoinTheme } from './coin-themes.js'
 import { heroes } from './heroes.js'
 
 const palettes = {
@@ -183,5 +184,5 @@ export const resolveVisuals = (hero, location, node) => ({
 
 export const resolveTrialVisuals = (campaignId, location, node) => {
   const scene = resolveLocationVisuals(campaignId, location, node)
-  return { ...scene, theme: tableVisuals[scene.table] }
+  return { ...scene, theme: tableVisuals[scene.table], ...(node.type === 'coin' && { coin: resolveCoinTheme(location) }) }
 }

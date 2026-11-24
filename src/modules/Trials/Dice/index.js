@@ -13,8 +13,6 @@ import {
 
 import Action from '@/components/Action'
 
-import TrialOutcome from '../TrialOutcome'
-
 import style from './index.module.scss'
 
 const pipsByValue = [
@@ -165,7 +163,6 @@ const Dice = ({ event, play, busy, material, opponent, heroName, result }) => {
           rolling={!!playerThrow}
           total={totals.player}
         />
-        <TrialOutcome outcome={outcome} />
       </div>
       {outcome ? (
         result

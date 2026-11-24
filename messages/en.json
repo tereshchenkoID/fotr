@@ -16,7 +16,8 @@
     "inventory": "Inventory",
     "profile": "Hero profile",
     "achievements": "Achievements",
-    "settings": "Settings"
+    "settings": "Settings",
+    "coin": "Fate’s Coin"
   },
   "home": {
     "kicker": "A Middle-earth adventure RPG",
@@ -89,7 +90,8 @@
   "rules": {
     "battle": "Match symbols across five lines to deal damage, shield or heal. Spend Focus to hold reels or use your hero’s ability.",
     "blackjack": "Get closer to 21 than the dealer without going over. Aces count as 1 or 11. The dealer draws to 17.",
-    "dice": "Roll five dice against an opponent. The higher total after three rounds wins. Ties go to extra rounds."
+    "dice": "Roll five dice against an opponent. The higher total after three rounds wins. Ties go to extra rounds.",
+    "coin": "Call each toss. A correct call earns you a point; the first to two wins."
   },
   "game": {
     "loading": "Loading your chronicle…",
@@ -157,7 +159,8 @@
     "rest": "Rest",
     "campTrial": {
       "dice": "Play dice at camp",
-      "blackjack": "Play cards at camp"
+      "blackjack": "Play cards at camp",
+      "coin": "Play Fate’s Coin at camp"
     },
     "restedCamp": "The company has rested. Check your gear or speak with your companions before setting out.",
     "choiceEffect": {
@@ -166,7 +169,8 @@
       "dice": "Play a three-round duel. A loss reduces the coin reward; the journey continues.",
       "negotiate": "Use your standing to open the way without a contest.",
       "useArtifact": "Use the equipped Forge Ember to open the way.",
-      "corrupt": "Use your influence to forge a pact and earn the Ring of Dominion."
+      "corrupt": "Use your influence to forge a pact and earn the Ring of Dominion.",
+      "coin": "A quick contest. A loss reduces the coin reward, and the road remains open."
     }
   },
   "choice": {
@@ -307,7 +311,8 @@
     "battle": "Win a battle",
     "jackpot": "Trigger a hero jackpot",
     "side": "Win an optional camp trial",
-    "finished": "Finish a hero chronicle"
+    "finished": "Finish a hero chronicle",
+    "coin": "Win Fate’s Coin"
   },
   "enemies": {
     "scout": "Shadow scout",
@@ -827,6 +832,14 @@
       "negotiate": {
         "name": "Ask the traders for passage",
         "effect": "Use your reputation to make an agreement without playing cards."
+      },
+      "dice": {
+        "name": "Play dice with the trader",
+        "effect": "A loss reduces the coin reward. The road remains open."
+      },
+      "coin": {
+        "name": "Call the trader’s coin",
+        "effect": "A quick contest. A loss reduces the coin reward, and the road remains open."
       }
     },
     "campDice": "Balin has cleared a stump by the fire. Play five dice against him while the others sleep.",
@@ -834,6 +847,38 @@
       "trollshaws": "A trail of missing provisions leads into the woods. Smoke rises from a clearing off the road.",
       "rivendell": "Elrond offers the company shelter in the valley. There is time to study Thrór’s map before crossing the Misty Mountains.",
       "lake": "The company looks for supplies and information among the markets on the lake."
+    }
+  },
+  "coin": {
+    "heads": "Heads",
+    "tails": "Tails",
+    "round": "Round {value} of {total}",
+    "score": "{player} to {opponent}",
+    "call": "Choose a side to toss the coin.",
+    "tossing": "The coin is in the air…",
+    "matched": "{face}. You earn the point.",
+    "missed": "{face}. Your opponent earns the point.",
+    "history": "Toss history",
+    "entry": "Round {round} · Called {guess} · Landed {face}"
+  },
+  "challenge": {
+    "choose": "Choose a challenge",
+    "start": "Start",
+    "startGame": "Start {game}",
+    "campStakes": "You earn the camp prize if you win. The road stays open after a loss.",
+    "campGame": "The company makes room for a friendly challenge.",
+    "winCoins": "Win reward includes {coins} coins.",
+    "games": {
+      "battle": "Reel battle",
+      "blackjack": "Blackjack",
+      "dice": "Dice duel",
+      "coin": "Fate’s Coin"
+    },
+    "rules": {
+      "battle": "Spin the reels, match symbols and use your hero’s abilities.",
+      "blackjack": "Beat the dealer’s hand without going over 21.",
+      "dice": "Roll five dice per round. The higher total after three rounds wins.",
+      "coin": "Call each toss. A correct call earns you a point; the first to two wins."
     }
   }
 }

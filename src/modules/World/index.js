@@ -23,9 +23,12 @@ import { useRouter } from '@/i18n/navigation'
 import { useGame } from '@/store/game'
 import { chapterKey, stories } from '@/game/content/stories'
 import { resolveLocationVisuals } from '@/game/content/visual-themes'
-import { campaigns, locationMarkers, locations } from '@/game/content/world'
+import {
+  campaigns, locationMarkers, locations, mapLabelPositions
+} from '@/game/content/world'
 import { sceneFor } from '@/game/core/session'
 import { canTravel } from '@/game/core/story'
+import { campGames } from '@/game/core/trials'
 
 import Action from '@/components/Action'
 
@@ -66,7 +69,7 @@ const World = ({ hero, progress, node, command }) => {
   const showObjective = (current || canEnter) && node.type !== 'end'
   const pending = current && node.type === 'reward'
   const sideAt = (id) => id === progress.location && (
-    progress.side?.active || (node.type === 'camp' && !progress.side && node.campTrial)
+    progress.side?.active || (node.type === 'camp' && !progress.side && campGames(node).length > 0)
   )
   const camp = sideAt(target.id)
 
@@ -197,7 +200,8 @@ const World = ({ hero, progress, node, command }) => {
                 const special = sideAt(id) ? 'side' : bossAt(id) ? 'boss' : undefined
                 const Icon = special === 'side' ? Tent : special === 'boss' ? Swords : markerIcons[locationMarkers[id]]
                 const Status = state === 'locked' ? Lock : state === 'visited' ? Check : null
-                const label = state !== 'locked' || target.id === id || locationMarkers[id] === 'settlement'
+                const position = mapLabelPositions[id] || (index % 2 === 1 ? 'below' : 'above')
+                const label = state !== 'locked' || target.id === id || mapLabelPositions[id] || locationMarkers[id] === 'settlement'
                 const marker = [
                   locations[id].names[locale], t(`world.${state}`),
                   special === 'side' ? t('story.side') : special === 'boss' ? t('battle.boss') : null,
@@ -210,7 +214,7 @@ const World = ({ hero, progress, node, command }) => {
                     style={{ left: `${locations[id].x}%`, top: `${locations[id].y}%` }}
                     data-state={state}
                     data-special={special}
-                    data-label-below={index % 2 === 1}
+                    data-label-position={position}
                     aria-pressed={target.id === id}
                     aria-label={marker}
                     onClick={(event) => {

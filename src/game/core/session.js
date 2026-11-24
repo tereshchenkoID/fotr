@@ -1,11 +1,14 @@
 import { heroes } from '../content/heroes.js'
+import { stories } from '../content/stories.js'
 import { campaigns } from '../content/world.js'
 import { playBlackjack, startBlackjack } from '../minigames/blackjack.js'
+import { playCoin, startCoin } from '../minigames/coin.js'
 import { playDice, startDice } from '../minigames/dice.js'
 
 import { heroStats, playBattle, startBattle } from './battle.js'
 import { grant } from './rewards.js'
 import {
+  automaticGame,
   canChoose,
   canTravel,
   chapterReward,
@@ -13,6 +16,7 @@ import {
   markChoice,
   startNode,
 } from './story.js'
+import { campGames, gameTypes, trialOutcome } from './trials.js'
 
 export const saveVersion = 3
 export const initialSave = () => ({
@@ -49,18 +53,22 @@ const launch = (hero, progress, node, random) => {
     return startBattle(hero, progress, node.enemy, random)
   if (node.type === 'blackjack') return startBlackjack()
   if (node.type === 'dice') return startDice()
+  if (node.type === 'coin') return startCoin()
   return null
 }
 
-export const trialTurn = (type, event) => type === 'blackjack'
-  ? (event.player.length + event.dealer.length) * 2 + Number(!!event.result)
-  : event.rounds.length * 2 - Number(!event.ready)
+export const trialTurn = (type, event) => {
+  if (type === 'blackjack')
+    return (event.player.length + event.dealer.length) * 2 + Number(!!event.result)
+  if (type === 'coin') return event.rounds.length
+  return event.rounds.length * 2 - Number(!event.ready)
+}
 
 const playEvent = (save, hero, progress, node, command, random) => {
   const event = node.side ? progress.side.game : progress.event
   if (!event) return
   if (node.type === 'battle' && command.turn !== event.turn) return
-  if (node.type === 'dice' && command.turn !== trialTurn('dice', event)) return
+  if (['dice', 'coin'].includes(node.type) && command.turn !== trialTurn(node.type, event)) return
   if (node.type === 'blackjack' && command.turn !== undefined && command.turn !== trialTurn('blackjack', event)) return
   const { action, index } = command
   let next = event
@@ -68,6 +76,7 @@ const playEvent = (save, hero, progress, node, command, random) => {
     next = playBattle(event, hero, progress, action, index, random)
   if (node.type === 'blackjack') next = playBlackjack(event, action, random)
   if (node.type === 'dice') next = playDice(event, action, random)
+  if (node.type === 'coin') next = playCoin(event, action, random)
   if (next === event) return
   if (node.side) progress.side.game = next
   else progress.event = next
@@ -81,45 +90,43 @@ const playEvent = (save, hero, progress, node, command, random) => {
 
 const finishEvent = (save, hero, progress, node) => {
   const event = node.side ? progress.side.game : progress.event
-  if (!event?.result || event.cinematic) return
+  if (!event?.result || event.cinematic) return false
+  const reward = node.side ? null : stories[hero.id][node.next]
+  const outcome = trialOutcome(node, event, reward, progress.checkpoint)
   if (node.side) {
     progress.side.active = false
-    if (event.result === 'win') {
-      grant(save, hero, progress, 'side', {
-        coins: 18,
-        xp: 25,
-        item: 'seal',
-        achievement: 'side',
-        flag: 'sideComplete',
-      })
-    }
-    return
+    progress.side.outcome = outcome
+    if (outcome.reward) grant(save, hero, progress, 'side', outcome.reward)
+    return true
   }
   progress.event = null
-  progress.result = event.result
-  if (node.type === 'battle' && event.result === 'loss') {
+  progress.result = outcome.result
+  progress.trialOutcome = outcome
+  if (outcome.game === 'battle' && outcome.result === 'loss') {
     progress.node = progress.checkpoint
     progress.hp = heroStats(hero, progress).hp
-    return
+    return true
   }
-  if (event.result === 'win') {
-    const achievement = node.type === 'blackjack' ? 'cards' : node.type
+  if (outcome.result === 'win') {
+    const achievement = outcome.game === 'blackjack' ? 'cards' : outcome.game
     grant(save, hero, progress, achievement, { achievement })
   }
   progress.node = node.next
+  return true
 }
 
-const advance = (save, hero, progress, node, command) => {
-  if (node.side || ['battle', 'blackjack', 'dice'].includes(node.type)) {
-    finishEvent(save, hero, progress, node)
-    return
-  }
-  if (!node.next || ['travel', 'choice'].includes(node.type)) return
+const advance = (save, hero, progress, node, command, random) => {
+  if (node.side || gameTypes.includes(node.type))
+    return finishEvent(save, hero, progress, node)
+  if (!node.next || ['travel', 'choice'].includes(node.type)) return false
   const next = getNode(hero, { ...progress, node: node.next })
   if (node.type === 'checkpoint' || next.type === 'checkpoint') {
     progress.checkpoint = next.type === 'checkpoint' ? next.next : next.id
     progress.node = progress.checkpoint
-    return
+    const checkpoint = getNode(hero, progress)
+    const automatic = automaticGame(checkpoint, progress)
+    if (automatic) choose(save, hero, progress, checkpoint, { action: automatic.id }, random)
+    return true
   }
   if (node.type === 'camp') progress.hp = heroStats(hero, progress).hp
   if (node.type === 'reward') {
@@ -131,12 +138,14 @@ const advance = (save, hero, progress, node, command) => {
     if (next.autoRest) progress.hp = heroStats(hero, progress).hp
   }
   progress.node = node.next
+  return true
 }
 
 const choose = (save, hero, progress, node, command, random) => {
   const choice = node.actions?.find(({ id }) => id === command.action)
-  if (!choice || !canChoose(choice, progress)) return
+  if (!choice || !canChoose(choice, progress)) return false
   progress.result = null
+  delete progress.trialOutcome
   const mark = `decision-${progress.chapter}`
   if (!progress.flags[mark] || choice.flag)
     progress.flags = markChoice(hero, progress, choice)
@@ -148,6 +157,7 @@ const choose = (save, hero, progress, node, command, random) => {
   const next = getNode(hero, progress)
   if (next.type === 'battle') progress.checkpoint = node.id
   progress.event = launch(hero, progress, next, random)
+  return true
 }
 
 export const applyCommand = (current, command, random = Math.random) => {
@@ -169,10 +179,10 @@ export const applyCommand = (current, command, random = Math.random) => {
   if (command.node !== node.id) return current
   switch (command.type) {
     case 'advance':
-      advance(save, hero, progress, node, command)
+      if (!advance(save, hero, progress, node, command, random)) return current
       break
     case 'choose':
-      choose(save, hero, progress, node, command, random)
+      if (!choose(save, hero, progress, node, command, random)) return current
       break
     case 'play':
       if (!playEvent(save, hero, progress, node, command, random)) return current
@@ -184,10 +194,12 @@ export const applyCommand = (current, command, random = Math.random) => {
       progress.visited.push(command.location)
       progress.node = node.next
       progress.result = null
+      delete progress.trialOutcome
       break
     case 'side': {
-      const type = node.campTrial
-      if (node.type !== 'camp' || progress.side || !type) return current
+      const games = campGames(node)
+      const type = command.action || (games.length === 1 ? games[0] : null)
+      if (node.type !== 'camp' || progress.side || !games.includes(type)) return current
       progress.side = { active: true, type }
       progress.side.game = launch(
         hero,
@@ -222,9 +234,4 @@ export const applyCommand = (current, command, random = Math.random) => {
 }
 
 export const sceneFor = (node) =>
-  ({
-    battle: 'battle',
-    blackjack: 'blackjack',
-    dice: 'dice',
-    travel: 'world',
-  })[node.type] || 'story'
+  gameTypes.includes(node.type) ? node.type : node.type === 'travel' ? 'world' : 'story'

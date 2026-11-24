@@ -140,7 +140,7 @@ describe('Thorin’s chronicle', () => {
   it.each([true, false])(
     'keeps a tied camp duel open and returns to camp after the extra round (win=%s)',
     (win) => {
-      let save = act(forestCamp(), 'side')
+      let save = act(forestCamp(), 'side', { action: 'dice' })
       expect(node(save)).toMatchObject({
         speaker: 'balin',
         side: true,
@@ -228,10 +228,18 @@ describe('Thorin’s chronicle', () => {
     for (const location of ['goblins', 'mirkwood', 'lake']) {
       save = act(advance(save), 'travel', { location })
       save = finishDialogue(save)
-      if (location !== 'lake') {
-        if (!progress(save).equipped.includes('ember'))
-          save = act(save, 'equip', { id: 'ember' })
+      if (location === 'goblins') {
+        save = act(save, 'equip', { id: 'ember' })
         save = advance(choose(save, 'useArtifact'))
+      }
+      if (location === 'mirkwood') {
+        while (!progress(save).event.result) {
+          const { turn } = progress(save).event
+          save = act(save, 'play', { action: 'spin', turn }, () => 0)
+          if (progress(save).event.cinematic)
+            save = act(save, 'play', { action: 'dismiss', turn: turn + 1 })
+        }
+        save = advance(advance(save))
       }
     }
     save = choose(save, 'blackjack')

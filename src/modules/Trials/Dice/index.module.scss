@@ -2,7 +2,7 @@
   display: grid;
   gap: 0.45rem;
   position: relative;
-  padding: clamp(0.55rem, 2vw, 0.95rem);
+  padding: clamp(0.45rem, 1.5vw, 0.75rem);
   border: 1px solid color-mix(in srgb, var(--theme-frame) 65%, transparent);
   border-radius: var(--theme-corner);
   background: radial-gradient(

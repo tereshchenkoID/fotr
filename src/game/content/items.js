@@ -136,6 +136,7 @@ export const achievements = [
   'first',
   'cards',
   'dice',
+  'coin',
   'battle',
   'jackpot',
   'side',

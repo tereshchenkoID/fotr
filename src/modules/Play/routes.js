@@ -6,6 +6,7 @@ export const scenes = [
   'battle',
   'blackjack',
   'dice',
+  'coin',
   'inventory',
   'profile',
   'achievements',

@@ -1,27 +1,7 @@
 .block {
-  @include absolute-filled;
-
   display: grid;
-  border-radius: inherit;
-  z-index: 1;
+  min-block-size: 2rem;
   place-items: center;
-  pointer-events: none;
-
-  &[data-outcome] {
-    background: linear-gradient(90deg, #090c1240, #090c128c, #090c1240);
-  }
-
-  &[data-inline='true'] {
-    position: static;
-    min-block-size: 2.2rem;
-    background: none;
-
-    .label {
-      padding: 0.15em 0.55em;
-      box-shadow: none;
-      font-size: 1rem;
-    }
-  }
 
   &[data-outcome='win'] {
     --outcome-color: #f8de9d;
@@ -47,13 +27,12 @@
   @include flex($align-items: center);
 
   gap: 0.45rem;
-  padding: 0.4em 1em;
+  padding: 0.15em 0.55em;
   border: 1px solid var(--outcome-color);
   border-radius: var(--radius);
   background: var(--outcome-surface);
-  box-shadow: 0 0.3rem 1rem #06090aba;
   font-family: var(--font-heading);
-  font-size: clamp(1rem, 3vw, 1.65rem);
+  font-size: 1rem;
   font-weight: 800;
   color: var(--outcome-color);
 }

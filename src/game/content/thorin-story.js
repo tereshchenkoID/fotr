@@ -45,7 +45,7 @@ export const thorinChapters = {
       camp: {
         line: 'trollCamp',
         speaker: 'balin',
-        campTrial: 'dice',
+        campGames: ['dice', 'blackjack', 'coin'],
         autoRest: true,
       },
     },
@@ -105,9 +105,18 @@ export const thorinChapters = {
     title: 'lake',
     scenes: {
       blackjack: { dealer: 'lakeTrader' },
+      dice: { dealer: 'lakeTrader' },
+      reward: { trialRewards: { coin: { win: { coins: 8 } } } },
+      coin: {
+        type: 'coin',
+        dealer: 'lakeTrader',
+        next: 'reward',
+      },
       choice: {
         actions: [
           branch('blackjack', 'blackjack'),
+          branch('dice', 'dice'),
+          branch('coin', 'coin'),
           branch('negotiate', 'reward', {
             requires: { reputation: 2 },
             flag: 'accord',

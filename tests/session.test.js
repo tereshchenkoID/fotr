@@ -104,8 +104,10 @@ describe('Story graph', () => {
         save = encounter(save)
         const final = chapter === config.route.length - 1
         const choices = node(save).actions
-        const action = choices.find(({ id }) => id === 'dice') || choices[0]
-        save = choose(save, action.id)
+        if (choices) {
+          const action = choices.find(({ id }) => id === 'dice') || choices[0]
+          save = choose(save, action.id)
+        }
         expect(validateSave(save)).toEqual(save)
         if (node(save).type === 'battle') {
           for (let turns = 0; turns < 14 && !active(save).event.result; turns++) {
